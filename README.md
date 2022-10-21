@@ -10,10 +10,10 @@ YouCube is a tool that streams [dfpwm](https://wiki.vexatos.com/dfpwm) files to 
 
 - [yt-dlp/FFmpeg](https://github.com/yt-dlp/FFmpeg-Builds)
 - [Python 3.7+](https://www.python.org/downloads/)
-  - [websockets](https://pypi.org/project/websockets/)
+  - [aiohttp](https://pypi.org/project/aiohttp/)
   - [yt-dlp](https://pypi.org/project/yt-dlp/)
 
-[websockets](https://pypi.org/project/websockets/) and [yt-dlp](https://pypi.org/project/yt-dlp/) can be installed through [pip](https://pip.pypa.io/en/stable/installation/). \
+[aiohttp](https://pypi.org/project/aiohttp/) and [yt-dlp](https://pypi.org/project/yt-dlp/) can be installed through [pip](https://pip.pypa.io/en/stable/installation/). \
 This can be archived by running `pip install -r server/requirements.txt`
 
 #### Running the Server
