@@ -38,6 +38,13 @@ local decoder = dfpwm.make_decoder()
 
 while true do
     local chunk = websocket.receive()
+
+    if chunk == "mister, the media has finished playing" then
+        print("mister, the media has finished playing")
+        websocket.close()
+        return
+    end
+
     local buffer = decoder(chunk)
 
     while not speaker.playAudio(buffer) do
@@ -56,5 +63,3 @@ while true do
 
     websocket.send(request)
 end
-
-websocket.close()

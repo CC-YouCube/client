@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import os
 import yt_dlp
@@ -135,13 +134,11 @@ class Server2(object):
 
                             chunk = get_chunk(file, chunkindex)
 
-                            self.logger.debug(
-                                prefix +
-                                "Is Chunk valide: " +
-                                str(chunk != None)
-                            )
+                            if len(chunk) == 0:
+                                await resp.send_str("mister, the media has finished playing")
+                            else:
+                                await resp.send_bytes(chunk)
 
-                            await resp.send_bytes(chunk)
                         else:
                             await resp.send_json({
                                 "action": "error",
