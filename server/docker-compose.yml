@@ -1,0 +1,9 @@
+version: "2.0"
+services:
+  youcube:
+    build: .
+    image: youcube
+    restart: always
+    ports:
+      - 5000:5000
+    #env_file: .env

@@ -1,0 +1,57 @@
+{
+    "Lua.runtime.version": "Lua 5.1",
+    "Lua.runtime.builtin": {
+        "bit32": "enable",
+        "bit": "disable",
+        "utf8": "enable"
+    },
+    "Lua.diagnostics.disable": [
+        "unused-local",
+        "lowercase-global",
+        "unused-function",
+        "undefined-field",
+        "deprecated"
+    ],
+    "Lua.diagnostics.severity": {
+        "redefined-local": "Warning"
+    },
+    "Lua.diagnostics.globals": [
+        "sleep",
+        "read",
+        "write",
+        "print",
+        "printError",
+        "colours",
+        "colors",
+        "commands",
+        "disk",
+        "fs",
+        "gps",
+        "help",
+        "http",
+        "paintutils",
+        "parallel",
+        "peripheral",
+        "rednet",
+        "redstone",
+        "rs",
+        "keys",
+        "settings",
+        "shell",
+        "multishell",
+        "term",
+        "textutils",
+        "turtle",
+        "pocket",
+        "vector",
+        "bit32",
+        "window",
+        "_CC_DEFAULT_SETTINGS",
+        "_HOST",
+        "_VERSION",
+        "_",
+        "_ENV",
+        "bit"
+    ],
+    "esbonio.sphinx.confDir": ""
+}
