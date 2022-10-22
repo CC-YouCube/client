@@ -18,8 +18,12 @@ def download(url: str) -> str:
     temp_dir = tempfile.TemporaryDirectory(prefix="youcube-")
 
     YDL_OPTIONS = {
-        "format": "bestaudio",
-        "outtmpl": os.path.join(temp_dir.name, "%(id)s.%(ext)s")
+        "format": "bestaudio/worstvideo+bestaudio/worstaudio/worstvideo+worstaudio/best",
+        "outtmpl": os.path.join(temp_dir.name, "%(id)s.%(ext)s"),
+        "default_search": "auto",
+        "restrictfilenames": True,
+        "noplaylist": True,  # currently playlist are not supported
+        "source_address": "0.0.0.0"  # ipv6 addresses cause issues sometimes
     }
 
     ytdl = yt_dlp.YoutubeDL(YDL_OPTIONS)
@@ -71,7 +75,7 @@ def get_peername_host(request: web.Request) -> str:
     peername = request.transport.get_extra_info('peername')
 
     if peername is not None:
-        host, port = peername
+        host, *_ = peername
         return host
     else:
         return None

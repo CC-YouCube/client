@@ -20,7 +20,10 @@ for i, server in pairs(servers) do
     websocket, websocket_error = http.websocket(server)
 
     if websocket ~= false then
-        print("Using the YouCube server: " .. server)
+        term.write("Using the YouCube server: ")
+        term.setTextColor(colors.blue)
+        print(server)
+        term.setTextColor(colors.white)
         break
     elseif i == #servers then
         error(websocket_error)
@@ -28,8 +31,12 @@ for i, server in pairs(servers) do
 
 end
 
-print("Enter Url or Search Term")
+print("Enter Url or Search Term:")
+term.setTextColor(colors.lightGray)
 url = read()
+term.setTextColor(colors.white)
+
+print("Requesting media ...")
 
 websocket.send(textutils.serialiseJSON({
     ["action"] = "request_media",
@@ -47,6 +54,17 @@ websocket.send(textutils.serialiseJSON({
     ["file"] = file
 }))
 
+term.write("Playing: ")
+term.setTextColor(colors.lime)
+print(file)
+term.setTextColor(colors.white)
+
+local x, y = term.getCursorPos()
+term.write("Chunkindex: ")
+term.setTextColor(colors.gray)
+term.write(chunkindex)
+term.setTextColor(colors.white)
+
 local dfpwm = require("cc.audio.dfpwm")
 local decoder = dfpwm.make_decoder()
 
@@ -54,7 +72,7 @@ while true do
     local chunk = websocket.receive()
 
     if chunk == "mister, the media has finished playing" then
-        print("mister, the media has finished playing")
+        print()
         websocket.close()
         return
     end
@@ -67,13 +85,15 @@ while true do
 
     chunkindex = chunkindex + 1
 
-    local request = textutils.serialiseJSON({
+    term.setCursorPos(x, y)
+    term.write("Chunkindex: ")
+    term.setTextColor(colors.gray)
+    term.write(chunkindex)
+    term.setTextColor(colors.white)
+
+    websocket.send(textutils.serialiseJSON({
         ["action"] = "get_chunk",
         ["chunkindex"] = chunkindex,
         ["file"] = file
-    })
-
-    print("Request:", request)
-
-    websocket.send(request)
+    }))
 end
