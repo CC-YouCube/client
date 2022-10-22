@@ -67,39 +67,43 @@ def get_chunk(file: str, chunkindex: int) -> bytes:
     return chunk
 
 
-# def get_client_ip(trusted_proxies=('127.0.0.1')):
-#    def get_peername_host():
-#        peername = request.transport.get_extra_info('peername')
-#
-#        if peername is not None:
-#            host, port = peername
-#            return host
-#        else:
-#            return None
-#
-#    client_ip = get_peername_host()
-#
-#    if trusted_proxies:
-#        if not client_ip in trusted_proxies:
-#            raise Exception
-#
-#    # Check Commong HTTP Headers
-#
-#    return client_ip
-
-def get_remote_host(request: web.Request) -> str:
-    peername = request.transport.get_extra_info("peername")
+def get_peername_host(request: web.Request) -> str:
+    peername = request.transport.get_extra_info('peername')
 
     if peername is not None:
         host, port = peername
-        return host + ":" + str(port)
+        return host
     else:
-        return "?.?.?.?:?????"
+        return None
+
+
+class UntrustedProxy(Exception):
+    def __str__(self) -> str:
+        return "A client is not using a trusted proxy!"
+
+
+def get_client_ip(request: web.Request, trusted_proxies: list) -> str:
+    peername_host = get_peername_host(request)
+
+    if trusted_proxies is None:
+        return peername_host
+
+    if peername_host in trusted_proxies:
+        x_forwarded_for = request.headers.get('X-Forwarded-For')
+
+        if x_forwarded_for is not None:
+            x_forwarded_for = x_forwarded_for.split(",")[0]
+
+        return x_forwarded_for or request.headers.get('True-Client-Ip')
+
+    else:
+        raise UntrustedProxy
 
 
 class Server(object):
-    def __init__(self, logger: logging.Logger) -> None:
+    def __init__(self, logger: logging.Logger, trusted_proxies: list) -> None:
         self.logger = logger
+        self.trusted_proxies = trusted_proxies
 
     async def on_shutdown(self, app: web.Application):
         for ws in app["sockets"]:
@@ -123,7 +127,7 @@ class Server(object):
         try:
             request.app["sockets"].append(resp)
 
-            prefix = f"[{request.remote}/{get_remote_host(request)}/{request.headers.get('True-Client-Ip')}] "
+            prefix = f"[{get_client_ip(request, self.trusted_proxies)}] "
             self.logger.info(prefix + "Connected!")
 
             self.logger.debug(
@@ -184,8 +188,16 @@ class Server(object):
 def main() -> None:
     logger = setup_logging()
     port = int(os.environ.get("PORT", "5000"))
+    trusted_proxies = os.environ.get("TRUSTED_PROXIES")
 
-    server = Server(logger)
+    proxies = None
+
+    if trusted_proxies != None:
+        proxies = []
+        for proxy in trusted_proxies.split(","):
+            proxies.append(proxy)
+
+    server = Server(logger, proxies)
 
     web.run_app(server.init(), port=port)
 
