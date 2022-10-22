@@ -10,11 +10,11 @@ CHUNK_SIZE = 16 * 1024
 DATA_FOLDER = os.path.abspath("./data")
 
 
-def is_file_name_valide(string: str):
+def is_file_name_valide(string: str) -> bool:
     return bool(re.match('^[a-zA-Z0-9]*$', string)) == True
 
 
-def download(url):
+def download(url: str) -> str:
     temp_dir = tempfile.TemporaryDirectory(prefix="youcube-")
 
     YDL_OPTIONS = {
@@ -43,7 +43,7 @@ def download(url):
     return final_file
 
 
-def setup_logging():
+def setup_logging() -> logging.Logger:
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
 
@@ -57,7 +57,7 @@ def setup_logging():
     return logger
 
 
-def get_chunk(file: str, chunkindex: int):
+def get_chunk(file: str, chunkindex: int) -> bytes:
     file = open(file, "rb")
     file.seek(chunkindex * CHUNK_SIZE)
 
@@ -67,14 +67,21 @@ def get_chunk(file: str, chunkindex: int):
     return chunk
 
 
-WS_FILE = os.path.join(os.path.dirname(__file__), "websocket.html")
+def get_remote_host(request: web.Request) -> str:
+    peername = request.transport.get_extra_info("peername")
+
+    if peername is not None:
+        host, port = peername
+        return host + ":" + str(port)
+    else:
+        return "?.?.?.?:?????"
 
 
-class Server2(object):
+class Server(object):
     def __init__(self, logger: logging.Logger) -> None:
         self.logger = logger
 
-    async def on_shutdown(self, app):
+    async def on_shutdown(self, app: web.Application):
         for ws in app["sockets"]:
             await ws.close()
 
@@ -96,7 +103,7 @@ class Server2(object):
         try:
             request.app["sockets"].append(resp)
 
-            prefix = f"[{request.host}] "
+            prefix = f"[{get_remote_host(request)}] "
             self.logger.info(prefix + "Connected!")
 
             self.logger.debug(
@@ -154,11 +161,11 @@ class Server2(object):
             self.logger.info(prefix + "Disconnected!")
 
 
-def main():
+def main() -> None:
     logger = setup_logging()
     port = int(os.environ.get("PORT", "5000"))
 
-    server = Server2(logger)
+    server = Server(logger)
 
     web.run_app(server.init(), port=port)
 

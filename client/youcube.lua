@@ -8,10 +8,24 @@ if speaker == nil then
     error("You need a speaker in order to use YouCube!")
 end
 
-local websocket, websocket_error = http.websocket("ws://localhost:5000")
+local servers = {
+    "ws://localhost:5000",
+    "wss://youcube.onrender.com"
+}
 
-if websocket == false then
-    error(websocket_error)
+local websocket
+
+for i, server in pairs(servers) do
+    local websocket_error
+    websocket, websocket_error = http.websocket(server)
+
+    if websocket ~= false then
+        print("Using the YouCube server: " .. server)
+        break
+    elseif i == #servers then
+        error(websocket_error)
+    end
+
 end
 
 print("Enter Url or Search Term")

@@ -1,4 +1,3 @@
-
 FROM python:3
 
 WORKDIR /opt/server

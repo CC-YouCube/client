@@ -6,6 +6,9 @@ YouCube is a tool that streams [dfpwm](https://wiki.vexatos.com/dfpwm) files to 
 
 ### Server
 
+If you dont want to host your own server then you can use the public server: `wss://youcube.onrender.com` \
+It might be slow, but it will do the job.
+
 #### Requirements
 
 - [yt-dlp/FFmpeg](https://github.com/yt-dlp/FFmpeg-Builds)
