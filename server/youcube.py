@@ -67,6 +67,26 @@ def get_chunk(file: str, chunkindex: int) -> bytes:
     return chunk
 
 
+# def get_client_ip(trusted_proxies=('127.0.0.1')):
+#    def get_peername_host():
+#        peername = request.transport.get_extra_info('peername')
+#
+#        if peername is not None:
+#            host, port = peername
+#            return host
+#        else:
+#            return None
+#
+#    client_ip = get_peername_host()
+#
+#    if trusted_proxies:
+#        if not client_ip in trusted_proxies:
+#            raise Exception
+#
+#    # Check Commong HTTP Headers
+#
+#    return client_ip
+
 def get_remote_host(request: web.Request) -> str:
     peername = request.transport.get_extra_info("peername")
 
@@ -103,7 +123,7 @@ class Server(object):
         try:
             request.app["sockets"].append(resp)
 
-            prefix = f"[{get_remote_host(request)}] "
+            prefix = f"[{request.remote}/{get_remote_host(request)}/{request.headers.get('True-Client-Ip')}] "
             self.logger.info(prefix + "Connected!")
 
             self.logger.debug(
