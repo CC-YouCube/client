@@ -12,7 +12,8 @@ RUN set -x \
     && chown 1000 /opt/server/ \
     && wget https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz \
     && tar -xf ffmpeg-master-latest-linux64-gpl.tar.xz \
-    && mv ffmpeg-master-latest-linux64-gpl/bin/* /bin/ -v
+    && mv ffmpeg-master-latest-linux64-gpl/bin/* /bin/ -v \
+    && rm ffmpeg-master-latest-linux64-gpl ffmpeg-master-latest-linux64-gpl.tar.xz -Rv
 
 USER 1000
 

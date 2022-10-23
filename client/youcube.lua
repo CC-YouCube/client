@@ -45,19 +45,27 @@ websocket.send(textutils.serialiseJSON({
 
 local data = websocket.receive()
 data = textutils.unserialiseJSON(data)
-local file = data.file
+
+if data.action == "error" then
+    error(data.message)
+end
+
+local id = data.id
 
 local chunkindex = 0
 websocket.send(textutils.serialiseJSON({
     ["action"] = "get_chunk",
     ["chunkindex"] = chunkindex,
-    ["file"] = file
+    ["id"] = id
 }))
 
 term.write("Playing: ")
 term.setTextColor(colors.lime)
-print(file)
+print(data.title)
 term.setTextColor(colors.white)
+
+print("Likes: " .. data.like_count)
+print("Views: " .. data.view_count)
 
 local x, y = term.getCursorPos()
 term.write("Chunkindex: ")
@@ -94,6 +102,6 @@ while true do
     websocket.send(textutils.serialiseJSON({
         ["action"] = "get_chunk",
         ["chunkindex"] = chunkindex,
-        ["file"] = file
+        ["id"] = id
     }))
 end

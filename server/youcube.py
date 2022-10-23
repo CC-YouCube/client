@@ -10,8 +10,17 @@ CHUNK_SIZE = 16 * 1024
 DATA_FOLDER = os.path.abspath("./data")
 
 
-def is_file_name_valide(string: str) -> bool:
+def is_id_valide(string: str) -> bool:
     return bool(re.match('^[a-zA-Z0-9]*$', string)) == True
+
+
+def fix_data_fodler():
+    if not os.path.exists(DATA_FOLDER):
+        os.mkdir(DATA_FOLDER)
+
+
+def is_already_downloaded(id: str) -> bool:
+    return os.path.exists(os.path.join(DATA_FOLDER, id + ".dfpwm"))
 
 
 def download(url: str) -> str:
@@ -23,20 +32,37 @@ def download(url: str) -> str:
         "default_search": "auto",
         "restrictfilenames": True,
         "noplaylist": True,  # currently playlist are not supported
-        "source_address": "0.0.0.0"  # ipv6 addresses cause issues sometimes
     }
 
     ytdl = yt_dlp.YoutubeDL(YDL_OPTIONS)
-    ytdl.download([url])
 
-    if not os.path.exists(DATA_FOLDER):
-        os.mkdir(DATA_FOLDER)
+    print("STATUS: extract_info")
 
-    id = os.listdir(temp_dir.name)[0].rsplit('.', 1)[0]
+    data = ytdl.extract_info(url, download=False)
 
-    final_file = os.path.join(DATA_FOLDER, id + ".dfpwm")
+    if data.get("_type") == "playlist":
+        data = data["entries"][0]
 
-    if not os.path.exists(final_file):
+    id = data.get("id")
+
+    if data.get("is_live"):
+        return {
+            "action": "error",
+            "message": "Livestreams are not supported"
+        }
+
+    fix_data_fodler()
+
+    if not is_already_downloaded(id):
+
+        print("STATUS: process_video_result")
+
+        ytdl.process_video_result(data, download=True)
+
+        print("STATUS: convert to dfpwm")
+
+        final_file = os.path.join(DATA_FOLDER, id + ".dfpwm")
+
         os.system(
             "ffmpeg -i {} -f dfpwm -ar 48000 -ac 1 {}".format(
                 os.path.join(temp_dir.name, "*"),
@@ -44,7 +70,20 @@ def download(url: str) -> str:
             )
         )
 
-    return final_file
+    return {
+        "action": "media",
+        "id": id,
+        # "fulltitle": data.get("fulltitle"),
+        "title": data.get("title"),
+        "like_count": data.get("like_count"),
+        "view_count": data.get("view_count"),
+        # "upload_date": data.get("upload_date"),
+        # "tags": data.get("tags"),
+        # "description": data.get("description"),
+        # "categories": data.get("categories"),
+        # "channel_name": data.get("channel"),
+        # "channel_id": data.get("channel_id")
+    }
 
 
 def setup_logging() -> logging.Logger:
@@ -148,22 +187,19 @@ class Server(object):
 
                     if message.get("action") == "request_media":
                         url = message.get("url")
-                        file = download(url)
+                        response = download(url)
 
-                        await resp.send_json({
-                            "action": "media",
-                            "file": os.path.basename(file).rsplit('.', 1)[0]
-                        })
+                        await resp.send_json(response)
 
                     if message.get("action") == "get_chunk":
                         chunkindex = message.get("chunkindex")
 
-                        file = message.get("file")
+                        id = message.get("id")
 
-                        if is_file_name_valide(file):
+                        if is_id_valide(id):
                             file = os.path.join(
                                 DATA_FOLDER,
-                                message.get("file") +
+                                message.get("id") +
                                 ".dfpwm"
                             )
 
