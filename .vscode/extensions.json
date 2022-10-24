@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "sumneko.lua",
+        "jackmacwindows.vscode-computercraft",
+        "donjayamanne.python-extension-pack",
+        "ms-azuretools.vscode-docker",
+        "carlos-algms.make-task-provider"
+    ]
+}

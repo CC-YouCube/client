@@ -1,0 +1,16 @@
+spellchecker: aspell
+
+matrix:
+  - name: python
+    aspell:
+      lang: en
+      d: en_US
+    sources:
+      - "**/*.py"
+    pipeline:
+      - pyspelling.filters.python:
+          strings: false
+          comments: true
+    dictionary:
+      wordlists:
+        - ./spellcheck_wordlist.txt

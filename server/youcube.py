@@ -1,9 +1,19 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
+"""
+YouCube Server
+"""
+
+# built-in modules
 import logging
 import os
-import yt_dlp
 import tempfile
 import json
 import re
+
+# pip modules
+import yt_dlp
 from aiohttp import web
 
 CHUNK_SIZE = 16 * 1024
@@ -11,68 +21,77 @@ DATA_FOLDER = os.path.abspath("./data")
 
 
 def is_id_valide(string: str) -> bool:
-    return bool(re.match('^[a-zA-Z0-9]*$', string)) == True
+    """
+    Returns True if the given string does not contain special characters
+    """
+    return bool(re.match('^[a-zA-Z0-9]*$', string))
 
 
 def fix_data_fodler():
+    """
+    Creates the data folder if it does not exist
+    """
     if not os.path.exists(DATA_FOLDER):
         os.mkdir(DATA_FOLDER)
 
 
-def is_already_downloaded(id: str) -> bool:
-    return os.path.exists(os.path.join(DATA_FOLDER, id + ".dfpwm"))
+def is_already_downloaded(media_id: str) -> bool:
+    """
+    Returns True if the given media is already downloaded
+    """
+    return os.path.exists(os.path.join(DATA_FOLDER, media_id + ".dfpwm"))
 
 
 def download(url: str) -> str:
-    temp_dir = tempfile.TemporaryDirectory(prefix="youcube-")
-
-    YDL_OPTIONS = {
-        "format": "bestaudio/worstvideo+bestaudio/worstaudio/worstvideo+worstaudio/best",
-        "outtmpl": os.path.join(temp_dir.name, "%(id)s.%(ext)s"),
-        "default_search": "auto",
-        "restrictfilenames": True,
-        "noplaylist": True,  # currently playlist are not supported
-    }
-
-    ytdl = yt_dlp.YoutubeDL(YDL_OPTIONS)
-
-    print("STATUS: extract_info")
-
-    data = ytdl.extract_info(url, download=False)
-
-    if data.get("_type") == "playlist":
-        data = data["entries"][0]
-
-    id = data.get("id")
-
-    if data.get("is_live"):
-        return {
-            "action": "error",
-            "message": "Livestreams are not supported"
+    """
+    Downloads and converts the media from the give URL
+    """
+    with tempfile.TemporaryDirectory(prefix="youcube-") as temp_dir:
+        yt_dl_options = {
+            "format": "bestaudio/worstvideo+bestaudio/worstaudio/worstvideo+worstaudio/best",
+            "outtmpl": os.path.join(temp_dir, "%(id)s.%(ext)s"),
+            "default_search": "auto",
+            "restrictfilenames": True,
+            "noplaylist": True,  # currently playlist are not supported
         }
 
-    fix_data_fodler()
+        yt_dl = yt_dlp.YoutubeDL(yt_dl_options)
 
-    if not is_already_downloaded(id):
+        print("STATUS: extract_info")
 
-        print("STATUS: process_video_result")
+        data = yt_dl.extract_info(url, download=False)
 
-        ytdl.process_video_result(data, download=True)
+        if data.get("_type") == "playlist":
+            data = data["entries"][0]
 
-        print("STATUS: convert to dfpwm")
+        media_id = data.get("id")
 
-        final_file = os.path.join(DATA_FOLDER, id + ".dfpwm")
+        if data.get("is_live"):
+            return {
+                "action": "error",
+                "message": "Livestreams are not supported"
+            }
 
-        os.system(
-            "ffmpeg -i {} -f dfpwm -ar 48000 -ac 1 {}".format(
-                os.path.join(temp_dir.name, "*"),
-                final_file
+        fix_data_fodler()
+
+        if not is_already_downloaded(media_id):
+
+            print("STATUS: process_video_result")
+
+            yt_dl.process_video_result(data, download=True)
+
+            print("STATUS: convert to dfpwm")
+
+            final_file = os.path.join(DATA_FOLDER, media_id + ".dfpwm")
+            media_file = os.path.join(temp_dir, '*')
+
+            os.system(
+                f"ffmpeg -i {media_file} -f dfpwm -ar 48000 -ac 1 {final_file}"
             )
-        )
 
     return {
         "action": "media",
-        "id": id,
+        "id": media_id,
         # "fulltitle": data.get("fulltitle"),
         "title": data.get("title"),
         "like_count": data.get("like_count"),
@@ -87,6 +106,9 @@ def download(url: str) -> str:
 
 
 def setup_logging() -> logging.Logger:
+    """
+    Creates the main YouCube Logger
+    """
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
 
@@ -100,32 +122,44 @@ def setup_logging() -> logging.Logger:
     return logger
 
 
-def get_chunk(file: str, chunkindex: int) -> bytes:
-    file = open(file, "rb")
-    file.seek(chunkindex * CHUNK_SIZE)
-
-    chunk = file.read(CHUNK_SIZE)
-    file.close()
+def get_chunk(media_file: str, chunkindex: int) -> bytes:
+    """
+    Returns a chunk of the given media file
+    """
+    with open(media_file, "rb") as file:
+        file.seek(chunkindex * CHUNK_SIZE)
+        chunk = file.read(CHUNK_SIZE)
+        file.close()
 
     return chunk
 
 
 def get_peername_host(request: web.Request) -> str:
+    """
+    Returns the Host of the web-request
+    """
     peername = request.transport.get_extra_info('peername')
 
     if peername is not None:
         host, *_ = peername
         return host
-    else:
-        return None
+
+    return None
 
 
 class UntrustedProxy(Exception):
+    """
+    Occurs when someone connects through an untrusted proxy
+    """
+
     def __str__(self) -> str:
         return "A client is not using a trusted proxy!"
 
 
 def get_client_ip(request: web.Request, trusted_proxies: list) -> str:
+    """
+    Returns the real client IP
+    """
     peername_host = get_peername_host(request)
 
     if trusted_proxies is None:
@@ -139,20 +173,30 @@ def get_client_ip(request: web.Request, trusted_proxies: list) -> str:
 
         return x_forwarded_for or request.headers.get('True-Client-Ip')
 
-    else:
-        raise UntrustedProxy
+    raise UntrustedProxy
 
 
-class Server(object):
+class Server():
+    """
+    The Web socket server Object
+    """
+
     def __init__(self, logger: logging.Logger, trusted_proxies: list) -> None:
         self.logger = logger
         self.trusted_proxies = trusted_proxies
 
     async def on_shutdown(self, app: web.Application):
-        for ws in app["sockets"]:
-            await ws.close()
+        """
+        Clears all web-sockets from the list
+        """
+
+        for websocket in app["sockets"]:
+            await websocket.close()
 
     def init(self):
+        """
+        Initialize the web-socket server
+        """
         app = web.Application()
         app["sockets"] = []
         app.router.add_get("/", self.wshandler)
@@ -160,10 +204,16 @@ class Server(object):
         return app
 
     async def wshandler(self, request: web.Request):
+        """
+        Handels web-socket requests
+        """
         resp = web.WebSocketResponse()
         available = resp.can_prepare(request)
         if not available:
-            return web.Response(body="You cannot access a WebSocket server directly. You need a WebSocket client.", content_type="text")
+            return web.Response(
+                body="You cannot access a WebSocket server directly. You need a WebSocket client.",
+                content_type="text"
+            )
 
         await resp.prepare(request)
 
@@ -194,9 +244,9 @@ class Server(object):
                     if message.get("action") == "get_chunk":
                         chunkindex = message.get("chunkindex")
 
-                        id = message.get("id")
+                        media_id = message.get("id")
 
-                        if is_id_valide(id):
+                        if is_id_valide(media_id):
                             file = os.path.join(
                                 DATA_FOLDER,
                                 message.get("id") +
@@ -226,13 +276,16 @@ class Server(object):
 
 
 def main() -> None:
+    """
+    Run all needed services
+    """
     logger = setup_logging()
     port = int(os.environ.get("PORT", "5000"))
     trusted_proxies = os.environ.get("TRUSTED_PROXIES")
 
     proxies = None
 
-    if trusted_proxies != None:
+    if trusted_proxies is not None:
         proxies = []
         for proxy in trusted_proxies.split(","):
             proxies.append(proxy)

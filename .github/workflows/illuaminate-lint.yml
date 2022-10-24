@@ -1,0 +1,25 @@
+name: Illuaminate Lint
+
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Lua
+        uses: leafo/gh-actions-lua@v9
+
+      - name: Install Illuaminate
+        run: |
+          test -d bin || mkdir bin
+          test -f bin/illuaminate || wget -q -Obin/illuaminate https://squiddev.cc/illuaminate/linux-x86-64/illuaminate
+          chmod +x bin/illuaminate
+
+      - name: Illuaminate Lint
+        run: illuaminate lint

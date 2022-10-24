@@ -7,8 +7,10 @@ YouCube is a tool that streams [dfpwm](https://wiki.vexatos.com/dfpwm) files to 
 
 ### Server
 
-If you dont want to host your own server then you can use the public server: `wss://youcube.onrender.com` \
-It might be slow, but it will do the job.
+If you dont want to host your own server: \
+YouCube has a public server. \
+The public server is set by default in the client, so you can just run the client and your good to go. \
+For anyone who is curious, the server "IP" is `wss://youcube.onrender.com`
 
 #### Requirements
 
@@ -30,12 +32,18 @@ python server/youcube.py
 
 The client can be installed by running the following command:
 
-```bash
-wget run https://raw.githubusercontent.com/Commandcracker/YouCube/main/client/youcube.lua
+```shell
+wget https://raw.githubusercontent.com/Commandcracker/YouCube/main/client/youcube.lua
 ```
 
 #### Running the Client
 
-```bash
+```text
 youcube
+```
+
+#### Trying out YouCube
+
+```shell
+wget run https://raw.githubusercontent.com/Commandcracker/YouCube/main/client/youcube.lua
 ```
