@@ -22,4 +22,4 @@ jobs:
           chmod +x bin/illuaminate
 
       - name: Illuaminate Lint
-        run: illuaminate lint
+        run: bin/illuaminate lint
