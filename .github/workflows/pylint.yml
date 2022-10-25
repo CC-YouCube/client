@@ -6,14 +6,14 @@ on:
   push:
 
 jobs:
-  build:
+  pylint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: "3"
 
@@ -23,6 +23,6 @@ jobs:
           pip install -r server/requirements.txt
           pip install pylint
 
-      - name: Analysing the code with pylint
+      - name: Pylint
         run: |
           pylint $(git ls-files '*.py')

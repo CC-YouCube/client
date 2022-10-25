@@ -1,5 +1,9 @@
 # YouCube
 
+[![Illuaminate Lint](https://github.com/Commandcracker/YouCube/actions/workflows/illuaminate-lint.yml/badge.svg)](https://github.com/Commandcracker/YouCube/actions/workflows/illuaminate-lint.yml)
+[![Pylint](https://github.com/Commandcracker/YouCube/actions/workflows/pylint.yml/badge.svg)](https://github.com/Commandcracker/YouCube/actions/workflows/pylint.yml)
+[![Spellcheck](https://github.com/Commandcracker/YouCube/actions/workflows/spellcheck.yml/badge.svg)](https://github.com/Commandcracker/YouCube/actions/workflows/spellcheck.yml)
+
 YouCube is a tool that streams [dfpwm](https://wiki.vexatos.com/dfpwm) files to [ComputerCraft: Tweaked](https://github.com/cc-tweaked/CC-Tweaked). The YouCube server uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [yt-dlp/FFmpeg](https://github.com/yt-dlp/FFmpeg-Builds) to provide media from Services like [YouTube](https://www.youtube.com/) as [dfpwm](https://wiki.vexatos.com/dfpwm) files. \
 **Project Status: Proof of concept**
 

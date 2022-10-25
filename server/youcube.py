@@ -11,13 +11,16 @@ import os
 import tempfile
 import json
 import re
+import asyncio
+import threading
+from typing import Any, Callable
 
 # pip modules
 import yt_dlp
 from aiohttp import web
 
 CHUNK_SIZE = 16 * 1024
-DATA_FOLDER = os.path.abspath("./data")
+DATA_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
 
 def is_id_valide(string: str) -> bool:
@@ -176,6 +179,54 @@ def get_client_ip(request: web.Request, trusted_proxies: list) -> str:
     raise UntrustedProxy
 
 
+class ThreadSaveAsyncioEventWithReturnValue(asyncio.Event):
+    """
+    Thread-save version of asyncio.Event with result / Return value
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.result = None
+
+    # pylint: disable-next=fixme
+    # TODO: clear() method
+
+    def set(self):
+        # pylint: disable-next=fixme
+        # FIXME: The _loop attribute is not documented as public api!
+        self._loop.call_soon_threadsafe(super().set)
+
+
+def run_with_thread_save_asyncio_event_with_return_value(
+    event: ThreadSaveAsyncioEventWithReturnValue,
+    func: Callable[[], Any],
+    *args
+) -> None:
+    """
+    Runs a function and calls a ThreadSaveAsyncioEventWithReturnValue
+    This function is meant to run in a thread
+    """
+    result = func(*args)
+    event.result = result
+    event.set()
+
+
+async def run_function_in_thread_from_async_function(
+    func: Callable[[], Any],
+    *args
+) -> object:
+    """
+    Runs a function in a thread from an async function
+    """
+    event = ThreadSaveAsyncioEventWithReturnValue()
+    threading.Thread(
+        target=run_with_thread_save_asyncio_event_with_return_value,
+        args=(event, func, *args)
+    ).start()
+    await event.wait()
+    return event.result
+
+
 class Server():
     """
     The Web socket server Object
@@ -237,8 +288,10 @@ class Server():
 
                     if message.get("action") == "request_media":
                         url = message.get("url")
-                        response = download(url)
-
+                        response = await run_function_in_thread_from_async_function(
+                            download,
+                            url
+                        )
                         await resp.send_json(response)
 
                     if message.get("action") == "get_chunk":
