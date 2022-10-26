@@ -4,7 +4,7 @@ run-server:
 	python server/youcube.py
 
 run-client:
-	craftos --id 2828 --exec "shell.run('youcube')" --mount-ro /=./client
+	craftos --id 2828 --exec "shell.run('clear') shell.run('youcube')" --mount-ro /=./client
 
 docker-build:
 	docker build -t youcube:1.0.0 -t youcube:latest server/.

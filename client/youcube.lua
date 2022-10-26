@@ -1,3 +1,12 @@
+--[[
+_  _ _  _ _  _ ___  ____ ____              
+|\ | |  | |\/| |__] |___ |__/              
+| \| |__| |  | |__] |___ |  \              
+____ ____ ____ _  _ ____ ___ ___ ____ ____ 
+|___ |  | |__/ |\/| |__|  |   |  |___ |__/ 
+|    |__| |  \ |  | |  |  |   |  |___ |  \ 
+]]
+
 local NumberFormatter = {}
 -- https://devforum.roblox.com/t/how-can-i-turn-a-number-to-a-shorter-number-i-dont-know-how-to-explain-click-to-understand-3/649496/3
 
@@ -36,16 +45,18 @@ function NumberFormatter.abbreviate(number)
     return left .. num:reverse():gsub('(%d%d%d)', '%1,'):reverse() .. right -- returns for example 1,000, it gets every 3 zeros and adds a  comma
 end
 
--------------------------------------------------------------------------------------------
+--[[
+_   _ ____ _  _ ____ _  _ ___  ____ ____ ___  _ 
+ \_/  |  | |  | |    |  | |__] |___ |__| |__] | 
+  |   |__| |__| |___ |__| |__] |___ |  | |    | 
+]]
 
-if periphemu then -- CraftOS-PC
-    periphemu.create("top", "speaker")
-end
+local YouCubeAPI = {}
 
-local speaker = peripheral.find("speaker")
-
-if speaker == nil then
-    error("You need a speaker in order to use YouCube!")
+function YouCubeAPI.new(websocket)
+    return setmetatable({
+        websocket = websocket,
+    }, { __index = YouCubeAPI })
 end
 
 local servers = {
@@ -53,23 +64,58 @@ local servers = {
     "wss://youcube.onrender.com"
 }
 
-local websocket
+function YouCubeAPI:detect_bestest_server()
+    for i, server in pairs(servers) do
+        local websocket, websocket_error = http.websocket(server)
 
-for i, server in pairs(servers) do
-    local websocket_error
-    websocket, websocket_error = http.websocket(server)
+        if websocket ~= false then
+            term.write("Using the YouCube server: ")
+            term.setTextColor(colors.blue)
+            print(server)
+            term.setTextColor(colors.white)
+            self.websocket = websocket
+            break
+        elseif i == #servers then
+            error(websocket_error)
+        end
 
-    if websocket ~= false then
-        term.write("Using the YouCube server: ")
-        term.setTextColor(colors.blue)
-        print(server)
-        term.setTextColor(colors.white)
-        break
-    elseif i == #servers then
-        error(websocket_error)
     end
-
 end
+
+function YouCubeAPI:get_chunk(chunkindex, id)
+    self.websocket.send(textutils.serialiseJSON({
+        ["action"] = "get_chunk",
+        ["chunkindex"] = chunkindex,
+        ["id"] = id
+    }))
+end
+
+function YouCubeAPI:request_media(url)
+    self.websocket.send(textutils.serialiseJSON({
+        ["action"] = "request_media",
+        ["url"] = url
+    }))
+end
+
+--[[
+_  _ ____ _ _  _    ____ _    _ 
+|\/| |__| | |\ |    |    |    | 
+|  | |  | | | \|    |___ |___ | 
+]]
+
+if periphemu then -- CraftOS-PC
+    periphemu.create("top", "speaker")
+end
+
+local speaker = peripheral.find("speaker")
+local tape = peripheral.find("tape_drive")
+
+if speaker == nil and tape == nil then
+    error("You need a tapedrive or speaker in order to use YouCube!")
+end
+
+local youcubeapi = YouCubeAPI.new()
+youcubeapi:detect_bestest_server()
 
 print("Enter Url or Search Term:")
 term.setTextColor(colors.lightGray)
@@ -77,13 +123,9 @@ local url = read()
 term.setTextColor(colors.white)
 
 print("Requesting media ...")
+youcubeapi:request_media(url)
 
-websocket.send(textutils.serialiseJSON({
-    ["action"] = "request_media",
-    ["url"] = url
-}))
-
-local data = websocket.receive()
+local data = youcubeapi.websocket.receive()
 data = textutils.unserialiseJSON(data)
 
 if data.action == "error" then
@@ -93,11 +135,8 @@ end
 local id = data.id
 
 local chunkindex = 0
-websocket.send(textutils.serialiseJSON({
-    ["action"] = "get_chunk",
-    ["chunkindex"] = chunkindex,
-    ["id"] = id
-}))
+
+youcubeapi:get_chunk(chunkindex, id)
 
 term.write("Playing: ")
 term.setTextColor(colors.lime)
@@ -113,35 +152,79 @@ term.setTextColor(colors.gray)
 term.write(chunkindex)
 term.setTextColor(colors.white)
 
-local dfpwm = require("cc.audio.dfpwm")
-local decoder = dfpwm.make_decoder()
 
-while true do
-    local chunk = websocket.receive()
-
-    if chunk == "mister, the media has finished playing" then
-        print()
-        websocket.close()
-        return
+-- https://github.com/Vexatos/Computronics/blob/b0ade53cab10529dbe91ebabfa882d1b4b21fa90/src/main/resources/assets/computronics/lua/peripheral/tape_drive/programs/tape_drive/tape#L109-L123
+local function wipe()
+    local size = tape.getSize()
+    tape.stop()
+    tape.seek(-size)
+    tape.stop()
+    tape.seek(-90000)
+    local s = string.rep(string.char(170), 8192)
+    for i = 1, size + 8191, 8192 do
+        tape.write(s)
     end
+    tape.seek(-size)
+    tape.seek(-90000)
+end
 
-    local buffer = decoder(chunk)
+if speaker then
+    local dfpwm = require("cc.audio.dfpwm")
+    local decoder = dfpwm.make_decoder()
 
-    while not speaker.playAudio(buffer) do
-        os.pullEvent("speaker_audio_empty")
+    while true do
+        local chunk = youcubeapi.websocket.receive()
+
+        if chunk == "mister, the media has finished playing" then
+            print()
+            youcubeapi.websocket.close()
+            return
+        end
+
+        local buffer = decoder(chunk)
+
+        while not speaker.playAudio(buffer) do
+            os.pullEvent("speaker_audio_empty")
+        end
+
+        chunkindex = chunkindex + 1
+
+        term.setCursorPos(x, y)
+        term.write("Chunkindex: ")
+        term.setTextColor(colors.gray)
+        term.write(chunkindex)
+        term.setTextColor(colors.white)
+
+        youcubeapi:get_chunk(chunkindex, id)
+
     end
+else
+    tape.stop()
+    tape.seek(-tape.getSize())
+    wipe()
+    tape.setLabel(data.title)
 
-    chunkindex = chunkindex + 1
+    while true do
+        local chunk = youcubeapi.websocket.receive()
 
-    term.setCursorPos(x, y)
-    term.write("Chunkindex: ")
-    term.setTextColor(colors.gray)
-    term.write(chunkindex)
-    term.setTextColor(colors.white)
+        if chunk == "mister, the media has finished playing" then
+            tape.seek(-tape.getSize())
+            tape.play()
+            print()
+            youcubeapi.websocket.close()
+            return
+        end
 
-    websocket.send(textutils.serialiseJSON({
-        ["action"] = "get_chunk",
-        ["chunkindex"] = chunkindex,
-        ["id"] = id
-    }))
+        tape.write(chunk)
+
+        chunkindex = chunkindex + 1
+
+        term.setCursorPos(x, y)
+        term.write("Chunkindex: ")
+        term.setTextColor(colors.gray)
+        term.write(chunkindex)
+        term.setTextColor(colors.white)
+
+        youcubeapi:get_chunk(chunkindex, id)
+    end
 end

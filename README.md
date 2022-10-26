@@ -1,22 +1,60 @@
 # YouCube
 
-[![Lua Lint Workflow Status](https://img.shields.io/github/workflow/status/Commandcracker/YouCube/Illuaminate%20Lint?label=Lua%20Lint&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/illuaminate-lint.yml)
-[![Python Lint Workflow Status](https://img.shields.io/github/workflow/status/Commandcracker/YouCube/Pylint?label=Python%20Lint&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/pylint.yml)
 [![Spellcheck Workflow Status](https://img.shields.io/github/workflow/status/Commandcracker/YouCube/Spellcheck?label=Spell-check&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/spellcheck.yml)
 [![Project license](https://img.shields.io/github/license/Commandcracker/YouCube?style=for-the-badge)](https://github.com/Commandcracker/YouCube/blob/main/LICENSE.txt)
-[![CC: Tweaked Version: 1.100+](https://img.shields.io/badge/CC:%20tweaked-1.100+-green?style=for-the-badge&logo=GNOME%20Terminal)](https://tweaked.cc/)
-[![Python Version: 3.7+](https://img.shields.io/badge/Python-3.7+-green?style=for-the-badge&logo=Python&logoColor=white)](https://www.python.org/downloads/)
 
-YouCube is a tool that streams [dfpwm](https://wiki.vexatos.com/dfpwm) files to [ComputerCraft: Tweaked](https://github.com/cc-tweaked/CC-Tweaked). The YouCube server uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [yt-dlp/FFmpeg](https://github.com/yt-dlp/FFmpeg-Builds) to provide media from Services like [YouTube](https://www.youtube.com/) as [dfpwm](https://wiki.vexatos.com/dfpwm) files. \
+YouCube is a tool that streams [dfpwm](https://wiki.vexatos.com/dfpwm) files to [ComputerCraft: Tweaked](https://github.com/cc-tweaked/CC-Tweaked). The YouCube server uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [yt-dlp/FFmpeg](https://github.com/yt-dlp/FFmpeg-Builds) to provide media from services like [YouTube](https://www.youtube.com/) as [dfpwm](https://wiki.vexatos.com/dfpwm) files. \
 **Project Status: Proof of concept**
 
 ## Inastallation
 
+### Client
+
+[![CC: Tweaked Version: 1.100+](https://img.shields.io/badge/CC:%20tweaked-1.100+-green?style=for-the-badge&logo=GNOME%20Terminal)](https://tweaked.cc/)
+![or](.README/slash.svg)
+[![CC: Tweaked Version: 1.80pr1.3+](https://img.shields.io/badge/CC:%20tweaked-1.80pr1.3+-green?style=for-the-badge&logo=GNOME%20Terminal)](https://tweaked.cc/)
+![+](.README/plus.svg)
+[![Computronics Version: 0.1.0+](https://img.shields.io/badge/Computronics-0.1.0+-green?style=for-the-badge)](https://wiki.vexatos.com/wiki:computronics) \
+[![Lua Lint Workflow Status](https://img.shields.io/github/workflow/status/Commandcracker/YouCube/Illuaminate%20Lint?label=Lua%20Lint&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/illuaminate-lint.yml)
+
+![preview](.README/preview-client.png)
+
+The client can be installed by running the following command:
+
+```shell
+pastebin run swsmNAf7
+```
+
+or
+
+```shell
+wget https://raw.githubusercontent.com/Commandcracker/YouCube/main/client/youcube.lua
+```
+
+#### Strating the Client
+
+```text
+youcube
+```
+
+#### Trying out YouCube
+
+If you dont want to install youcube you can use this command:
+
+```shell
+wget run https://raw.githubusercontent.com/Commandcracker/YouCube/main/client/youcube.lua
+```
+
 ### Server
 
-If you dont want to host your own server: \
-YouCube has a public server. \
-The public server is set by default in the client, so you can just run the client and your good to go. \
+[![Python Version: 3.7+](https://img.shields.io/badge/Python-3.7+-green?style=for-the-badge&logo=Python&logoColor=white)](https://www.python.org/downloads/)
+[![Python Lint Workflow Status](https://img.shields.io/github/workflow/status/Commandcracker/YouCube/Pylint?label=Python%20Lint&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/pylint.yml)
+
+![preview](.README/preview-server.png)
+
+YouCube has a public server, which you can use if you don't want to host your own server. \
+The public server is a bot slow, but that's a trait you need to take if you don't want to self-host. \
+The client has the public server set by default, so you can just run the client, and you're good to go. \
 For anyone who is curious, the server "IP" is `wss://youcube.onrender.com`
 
 #### Requirements
@@ -26,31 +64,14 @@ For anyone who is curious, the server "IP" is `wss://youcube.onrender.com`
   - [aiohttp](https://pypi.org/project/aiohttp/)
   - [yt-dlp](https://pypi.org/project/yt-dlp/)
 
-[aiohttp](https://pypi.org/project/aiohttp/) and [yt-dlp](https://pypi.org/project/yt-dlp/) can be installed through [pip](https://pip.pypa.io/en/stable/installation/). \
-This can be archived by running `pip install -r server/requirements.txt`
+You can install the required packages with [pip](https://pip.pypa.io/en/stable/installation/) by runnig:
 
-#### Running the Server
+```shell
+pip install -r server/requirements.txt
+```
+
+#### Strating the Server
 
 ```bash
 python server/youcube.py
-```
-
-### Client
-
-The client can be installed by running the following command:
-
-```shell
-wget https://raw.githubusercontent.com/Commandcracker/YouCube/main/client/youcube.lua
-```
-
-#### Running the Client
-
-```text
-youcube
-```
-
-#### Trying out YouCube
-
-```shell
-wget run https://raw.githubusercontent.com/Commandcracker/YouCube/main/client/youcube.lua
 ```
