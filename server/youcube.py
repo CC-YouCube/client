@@ -27,7 +27,7 @@ def is_id_valide(string: str) -> bool:
     """
     Returns True if the given string does not contain special characters
     """
-    return bool(re.match('^[a-zA-Z0-9]*$', string))
+    return bool(re.match('^[a-zA-Z0-9-_]*$', string))
 
 
 def fix_data_fodler():
