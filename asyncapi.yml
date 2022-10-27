@@ -9,13 +9,18 @@ info:
 
 servers:
   public:
-    url: "wss://youcube.onrender.com"
-    protocol: kafka-secure
+    url: "youcube.onrender.com"
+    protocol: wss
     description: Public YouCube Server *(a bit slow)*
 
 defaultContentType: application/json
 channels:
   /:
+    parameters:
+      action:
+        description: action
+        schema:
+          type: string
     subscribe:
       message:
         $ref: "#/components/messages/request_media"
@@ -41,7 +46,8 @@ components:
             type: string
             description: action
           chunkindex:
-            type: number
+            type: integer
+            minimum: 0
             description: chunkindex
           id:
             type: string
