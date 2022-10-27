@@ -24,7 +24,7 @@ jobs:
         with:
           template: "@asyncapi/html-template@0.9.0" #In case of template from npm, because of @ it must be in quotes
           filepath: asyncapi.yml
-          parameters: baseHref=/test-experiment/ sidebarOrganization=byTags #space separated list of key/values
+          parameters: baseHref=/YouCube/ sidebarOrganization=byTags #space separated list of key/values
           output: generated-html
 
       #Using another action that takes generated HTML and pushes it to GH Pages
