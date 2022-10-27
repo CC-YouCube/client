@@ -12,3 +12,10 @@ ThreadSaveAsyncioEventWithReturnValue
 asyncio
 fixme
 pylint
+Popen
+dl
+ffmpeg
+py
+subprocess
+utils
+yt
