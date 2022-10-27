@@ -86,8 +86,11 @@ def download(url: str) -> str:
             print("STATUS: convert to dfpwm")
 
             final_file = os.path.join(DATA_FOLDER, media_id + ".dfpwm")
-            media_file = os.path.join(temp_dir, '*')
 
+            media_file = os.path.join(temp_dir, os.listdir(temp_dir)[0])
+
+            # pylint: disable-next=fixme
+            # TODO: use yt_dl.utils.py Popen(subprocess.Popen) for ffmpeg
             os.system(
                 f"ffmpeg -i {media_file} -f dfpwm -ar 48000 -ac 1 {final_file}"
             )
