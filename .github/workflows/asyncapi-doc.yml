@@ -13,10 +13,10 @@ jobs:
         uses: actions/checkout@v2
 
       #Using another action for AsyncAPI for validation
-      - name: Validating AsyncAPI document
-        uses: WaleedAshraf/asyncapi-github-action@v0.0.8
-        with:
-          filepath: asyncapi.yml
+      #- name: Validating AsyncAPI document
+      #  uses: WaleedAshraf/asyncapi-github-action@v0.0.8
+      #  with:
+      #    filepath: asyncapi.yml
 
       #In case you do not want to use defaults, you for example want to use different template
       - name: Generating HTML from my AsyncAPI document
