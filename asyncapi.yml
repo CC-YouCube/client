@@ -1,0 +1,49 @@
+asyncapi: 2.5.0
+info:
+  title: YouCube
+  version: 1.0.0
+  description: "Documentation for YouCube's backend API."
+  license:
+    name: GLP-3.0
+    url: "https://github.com/Commandcracker/YouCube/blob/main/LICENSE.txt"
+
+servers:
+  public:
+    url: "wss://youcube.onrender.com"
+    protocol: kafka-secure
+    description: Public YouCube Server *(a bit slow)*
+
+defaultContentType: application/json
+channels:
+  /:
+    subscribe:
+      message:
+        $ref: "#/components/messages/request_media"
+
+components:
+  messages:
+    request_media:
+      payload:
+        type: object
+        properties:
+          action:
+            type: string
+            description: action
+          url:
+            type: string
+            description: Url or Search Term
+
+    get_chunk:
+      payload:
+        type: object
+        properties:
+          action:
+            type: string
+            description: action
+          chunkindex:
+            type: number
+            description: chunkindex
+          id:
+            type: string
+            format: ^[a-zA-Z0-9-_]*$
+            description: id

@@ -1,0 +1,22 @@
+name: AsyncAPI documents processing
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Generating HTML from my AsyncAPI document
+        uses: asyncapi/github-action-for-generator@v2.0.0
+
+      - name: Deploy GH page
+        uses: JamesIves/github-pages-deploy-action@4.4.1
+        with:
+          ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: generated-html

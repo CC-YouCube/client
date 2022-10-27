@@ -4,6 +4,7 @@
         "jackmacwindows.vscode-computercraft",
         "donjayamanne.python-extension-pack",
         "ms-azuretools.vscode-docker",
-        "carlos-algms.make-task-provider"
+        "carlos-algms.make-task-provider",
+        "asyncapi.asyncapi-preview"
     ]
 }

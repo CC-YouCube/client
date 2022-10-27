@@ -55,6 +55,7 @@ def download(url: str) -> str:
             "outtmpl": os.path.join(temp_dir, "%(id)s.%(ext)s"),
             "default_search": "auto",
             "restrictfilenames": True,
+            #"extract_flat": "in_playlist",
             "noplaylist": True,  # currently playlist are not supported
         }
 
