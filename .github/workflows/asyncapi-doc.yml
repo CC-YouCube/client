@@ -12,7 +12,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Generating HTML from my AsyncAPI document
-        uses: asyncapi/github-action-for-generator@v2.1.7
+        uses: asyncapi/github-action-for-generator@v2.0.0
 
       - name: Deploy GH page
         uses: JamesIves/github-pages-deploy-action@v4
