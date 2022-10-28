@@ -3,6 +3,8 @@ name: AsyncAPI documents processing
 on:
   push:
     branches: [main]
+    paths:
+      - "asyncapi.yml"
 
 jobs:
   generate:

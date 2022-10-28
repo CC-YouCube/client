@@ -2,8 +2,12 @@ name: Pylint
 
 on:
   pull_request:
+    paths:
+      - "server/**.py"
   workflow_dispatch:
   push:
+    paths:
+      - "server/**.py"
 
 jobs:
   pylint:
