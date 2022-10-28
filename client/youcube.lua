@@ -64,6 +64,13 @@ local servers = {
     "wss://youcube.onrender.com"
 }
 
+if settings then
+    local server = settings.get("youcube.server")
+    if server then
+        table.insert(servers, 1, server)
+    end
+end
+
 function YouCubeAPI:detect_bestest_server()
     for i, server in pairs(servers) do
         local websocket, websocket_error = http.websocket(server)
