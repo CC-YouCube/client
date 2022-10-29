@@ -7,7 +7,7 @@
 YouCube is a tool that streams [dfpwm](https://wiki.vexatos.com/dfpwm) files to [ComputerCraft: Tweaked](https://github.com/cc-tweaked/CC-Tweaked). The YouCube server uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [yt-dlp/FFmpeg](https://github.com/yt-dlp/FFmpeg-Builds) to provide media from services like [YouTube](https://www.youtube.com/) as [dfpwm](https://wiki.vexatos.com/dfpwm) files. \
 **Project Status: Proof of concept**
 
-## Inastallation
+## Installation
 
 ### Client
 
@@ -32,7 +32,7 @@ or
 wget https://raw.githubusercontent.com/Commandcracker/YouCube/main/client/youcube.lua
 ```
 
-#### Strating the Client
+#### Starting the Client
 
 ```text
 youcube
@@ -40,7 +40,7 @@ youcube
 
 #### Trying out YouCube
 
-If you dont want to install youcube you can use this command:
+If you dont want to install YouCube you can use this command:
 
 ```shell
 wget run https://raw.githubusercontent.com/Commandcracker/YouCube/main/client/youcube.lua
@@ -65,13 +65,13 @@ For anyone who is curious, the server "IP" is `wss://youcube.onrender.com`
   - [aiohttp](https://pypi.org/project/aiohttp/)
   - [yt-dlp](https://pypi.org/project/yt-dlp/)
 
-You can install the required packages with [pip](https://pip.pypa.io/en/stable/installation/) by runnig:
+You can install the required packages with [pip](https://pip.pypa.io/en/stable/installation/) by running:
 
 ```shell
 pip install -r server/requirements.txt
 ```
 
-#### Strating the Server
+#### Starting the Server
 
 ```bash
 python server/youcube.py
