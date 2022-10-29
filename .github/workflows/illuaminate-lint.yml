@@ -2,8 +2,12 @@ name: Illuaminate Lint
 
 on:
   pull_request:
+    paths:
+      - "client/**.lua"
   workflow_dispatch:
   push:
+    paths:
+      - "client/**.lua"
 
 jobs:
   illuaminate-lint:

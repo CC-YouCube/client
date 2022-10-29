@@ -3,6 +3,8 @@ name: AsyncAPI documents processing
 on:
   push:
     branches: [main]
+    paths:
+      - "asyncapi.yml"
 
 jobs:
   generate:
@@ -31,6 +33,4 @@ jobs:
       - name: Deploy GH page
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: gh-pages
-          FOLDER: generated-html
+          folder: generated-html

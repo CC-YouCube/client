@@ -16,7 +16,7 @@
    (dynamic-modules)
    
    ;; List of global variables
-   (globals :max textutils term colors http peripheral periphemu read)
+   (globals :max textutils term colors http peripheral periphemu read settings)
    
    ;; Whether tables entries should be separated by a comma (',') or semicolon (';').
    (table-separator comma)

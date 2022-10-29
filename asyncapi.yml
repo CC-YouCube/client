@@ -1,4 +1,4 @@
-asyncapi: 2.2.0
+asyncapi: 2.4.0
 info:
   title: YouCube
   version: 1.0.0
@@ -6,50 +6,85 @@ info:
   license:
     name: GLP-3.0
     url: "https://github.com/Commandcracker/YouCube/blob/main/LICENSE.txt"
+  contact:
+    name: Github
+    url: https://github.com/Commandcracker/YouCube
 
 servers:
   public:
-    url: "youcube.onrender.com"
+    url: wss://youcube.onrender.com
     protocol: wss
-    description: Public YouCube Server *(a bit slow)*
+    description: |
+      **Public YouCube Server**
+
+      The public server is a bit slow, but that's a trait you need to take if you don't want to self-host. \
+      The client has the public server set by default, so you can just run the client, and you're good to go.
 
 defaultContentType: application/json
 channels:
   /:
-    parameters:
-      action:
-        description: action
-        schema:
-          type: string
     subscribe:
+      description: "Messages the Server Can Process"
       message:
-        $ref: "#/components/messages/request_media"
+        oneOf:
+          - $ref: "#/components/messages/request_media"
+          - $ref: "#/components/messages/get_chunk"
+    publish:
+      description: "Messages the Server Can Return"
+      message:
+        oneOf:
+          - $ref: "#/components/messages/error"
 
 components:
   messages:
     request_media:
       payload:
         type: object
+        additionalProperties: false
         properties:
           action:
             type: string
-            description: action
+            description: The action that should be performed
+            enum:
+              - "request_media"
           url:
             type: string
             description: Url or Search Term
+            examples:
+              - "Never Gonna Give You Up"
+              - "dQw4w9WgXcQ"
 
     get_chunk:
       payload:
         type: object
+        additionalProperties: false
         properties:
           action:
             type: string
-            description: action
+            description: The action that should be performed
+            enum:
+              - "get_chunk"
           chunkindex:
             type: integer
             minimum: 0
-            description: chunkindex
+            description: Index of the next chunk
           id:
             type: string
-            format: ^[a-zA-Z0-9-_]*$
-            description: id
+            pattern: ^[a-zA-Z0-9-_]*$
+            description: Media id
+            example: "dQw4w9WgXcQ"
+
+    error:
+      payload:
+        type: object
+        additionalProperties: false
+        properties:
+          action:
+            type: string
+            description: The action that should be performed
+            enum:
+              - "error"
+          message:
+            type: string
+            description: The error message
+            example: "You dare not use special Characters"

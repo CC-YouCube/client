@@ -1,9 +1,14 @@
 name: Spellcheck
+# Currently, only python is spellchecked
 
 on:
   pull_request:
+    paths:
+      - "server/**.py"
   workflow_dispatch:
   push:
+    paths:
+      - "server/**.py"
 
 jobs:
   spellcheck:
