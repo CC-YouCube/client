@@ -11,14 +11,22 @@ info:
     url: https://github.com/Commandcracker/YouCube
 
 servers:
-  public:
+  public-1:
+    url: ws://oxygen.knijn.one:5000
+    protocol: ws
+    description: |
+      **Primary YouCube Public Server**
+
+      This public server is pretty quick, and hosted in New York City, this is set public by default
+  public-2:
     url: wss://youcube.onrender.com
     protocol: wss
     description: |
-      **Public YouCube Server**
+      **Secondary YouCube Public Server**
 
-      The public server is a bit slow, but that's a trait you need to take if you don't want to self-host. \
-      The client has the public server set by default, so you can just run the client, and you're good to go.
+      This public server is a bit slow, but that's a trait you need to take if you don't want to self-host. \
+      The client has this public server set by default, so you can just run the client, and you're good to go.
+    
 
 defaultContentType: application/json
 channels:
