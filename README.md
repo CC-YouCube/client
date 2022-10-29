@@ -53,10 +53,9 @@ wget run https://raw.githubusercontent.com/Commandcracker/YouCube/main/client/yo
 
 ![preview](.README/preview-server.png)
 
-YouCube has a public server, which you can use if you don't want to host your own server. \
-The public server is a bit slow, but that's a trait you need to take if you don't want to self-host. \
-The client has the public server set by default, so you can just run the client, and you're good to go. \
-For anyone who is curious, the server "IP" is `wss://youcube.onrender.com`
+YouCube has a some public servers, which you can use if you don't want to host your own server. \
+The client has the public servers set by default, so you can just run the client, and you're good to go. \
+Moor Information about the servers can be seen on the [doc](https://commandcracker.github.io/YouCube/).
 
 #### Requirements
 

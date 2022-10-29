@@ -2,7 +2,11 @@ asyncapi: 2.4.0
 info:
   title: YouCube
   version: 1.0.0
-  description: "Documentation for YouCube's backend API."
+  description: |
+    Documentation for YouCube's backend API.
+
+    All public servers are set by default in the client. \
+    The client will choose the best automatically.
   license:
     name: GLP-3.0
     url: "https://github.com/Commandcracker/YouCube/blob/main/LICENSE.txt"
@@ -11,22 +15,26 @@ info:
     url: https://github.com/Commandcracker/YouCube
 
 servers:
-  public-1:
+  public-primary:
     url: ws://oxygen.knijn.one:5000
     protocol: ws
     description: |
-      **Primary YouCube Public Server**
+      **Primary Public Server**
 
-      This public server is pretty quick, and hosted in New York City, this is set public by default
-  public-2:
+      Hosted on [voxvm](https://voxvm.com/) in [New York City](https://duckduckgo.com/?t=ffab&q=New+York+City&ia=web&iax=about&iaxm=maps) by [EmmaKnijn](https://knijn.one/)
+
+      This server is pretty quick and slick. \
+      Thats also a reason, why this server is the primary one.
+  public-fallback:
     url: wss://youcube.onrender.com
     protocol: wss
     description: |
-      **Secondary YouCube Public Server**
+      **Public Fallback Server**
 
-      This public server is a bit slow, but that's a trait you need to take if you don't want to self-host. \
-      The client has this public server set by default, so you can just run the client, and you're good to go.
-    
+      Hosted on [render](https://render.com/) in [Oregon (US West)](https://duckduckgo.com/?t=ffab&q=Oregon+(US+West)&ia=web&iaxm=about&iax=images) by [Commandcracker](https://github.com/Commandcracker)
+
+      This server is only meant to be used when the primary server is offline. \
+      It's pretty slow, but it should do the job.
 
 defaultContentType: application/json
 channels:
@@ -42,6 +50,8 @@ channels:
       message:
         oneOf:
           - $ref: "#/components/messages/error"
+          - $ref: "#/components/messages/chunk"
+          - $ref: "#/components/messages/media"
 
 components:
   messages:
@@ -96,3 +106,40 @@ components:
             type: string
             description: The error message
             example: "You dare not use special Characters"
+
+    chunk:
+      payload:
+        type: object
+        description: 1 chunk is 16 * 1024 bits
+        additionalProperties: false
+        example: "ªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªª ..."
+
+    media:
+      payload:
+        type: object
+        additionalProperties: true
+        properties:
+          action:
+            type: string
+            description: The action that should be performed
+            enum:
+              - "media"
+          id:
+            type: string
+            pattern: ^[a-zA-Z0-9-_]*$
+            description: The media id
+            example: "dQw4w9WgXcQ"
+          title:
+            type: string
+            description: The title of the media
+            example: "Never Gonna Give You Up"
+          like_count:
+            type: integer
+            description: The like count of the media
+            example: 15526549
+            minimum: 0
+          view_count:
+            type: integer
+            description: The view count of the media
+            example: 1307201506
+            minimum: 0
