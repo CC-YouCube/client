@@ -17,6 +17,7 @@ YouCube is a tool that streams [dfpwm](https://wiki.vexatos.com/dfpwm) files to 
 ![+](.README/plus.svg)
 [![Computronics Version: 0.1.0+](https://img.shields.io/badge/Computronics-0.1.0+-green?style=for-the-badge)](https://wiki.vexatos.com/wiki:computronics) \
 [![Lua Lint Workflow Status](https://img.shields.io/github/workflow/status/Commandcracker/YouCube/Illuaminate%20Lint?label=Lua%20Lint&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/illuaminate-lint.yml)
+[![lStore Package](https://img.shields.io/github/workflow/status/Commandcracker/YouCube/Publish%20lStore%20package?label=lStore%20Package&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/lstore-put.yml)
 
 ![preview](.README/preview-client.png)
 
