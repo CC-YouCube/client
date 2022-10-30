@@ -1,0 +1,20 @@
+name: Publish lStore package
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: Publish Package
+        uses: Commandcracker/lstore-put@v1
+        with:
+          username: ${{ secrets.LSTORE_USERNAME }}
+          password: ${{ secrets.LSTORE_PASSWORD }}
+          path: client
+          title: YouCube
