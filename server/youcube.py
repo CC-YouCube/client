@@ -22,6 +22,10 @@ from aiohttp import web
 CHUNK_SIZE = 16 * 1024
 DATA_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
+# pylint settings
+# pylint: disable=pointless-string-statement
+# pylint: disable=fixme
+
 
 def is_id_valide(string: str) -> bool:
     """
@@ -55,8 +59,7 @@ def download(url: str) -> str:
             "outtmpl": os.path.join(temp_dir, "%(id)s.%(ext)s"),
             "default_search": "auto",
             "restrictfilenames": True,
-            # "extract_flat": "in_playlist",
-            "noplaylist": True,  # currently playlist are not supported
+            "extract_flat": "in_playlist"
         }
 
         yt_dl = yt_dlp.YoutubeDL(yt_dl_options)
@@ -65,8 +68,27 @@ def download(url: str) -> str:
 
         data = yt_dl.extract_info(url, download=False)
 
+        """
+        If the data is a playlist, we need to get the first video and return it,
+        also, we need to grep all video in the playlist to provide support.
+        """
+        playlist_videos = []
+
         if data.get("_type") == "playlist":
+            for video in data.get("entries"):
+                playlist_videos.append(video.get("id"))
+
+            playlist_videos.pop(0)
+
             data = data["entries"][0]
+
+        """
+        If the video is extract from a playlist,
+        the video is extracted flat,
+        so we need to get missing information by running the extractor again.
+        """
+        if data.get("view_count") is None or data.get("like_count") is None:
+            data = yt_dl.extract_info(data.get("id"), download=False)
 
         media_id = data.get("id")
 
@@ -90,13 +112,12 @@ def download(url: str) -> str:
 
             media_file = os.path.join(temp_dir, os.listdir(temp_dir)[0])
 
-            # pylint: disable-next=fixme
             # TODO: use yt_dl.utils.py Popen(subprocess.Popen) for ffmpeg
             os.system(
                 f"ffmpeg -i {media_file} -f dfpwm -ar 48000 -ac 1 {final_file}"
             )
 
-    return {
+    out = {
         "action": "media",
         "id": media_id,
         # "fulltitle": data.get("fulltitle"),
@@ -110,6 +131,12 @@ def download(url: str) -> str:
         # "channel_name": data.get("channel"),
         # "channel_id": data.get("channel_id")
     }
+
+    # Only return playlist_videos if there are videos in playlist_videos
+    if len(playlist_videos) > 0:
+        out["playlist_videos"] = playlist_videos
+
+    return out
 
 
 def setup_logging() -> logging.Logger:
@@ -192,11 +219,9 @@ class ThreadSaveAsyncioEventWithReturnValue(asyncio.Event):
         super().__init__()
         self.result = None
 
-    # pylint: disable-next=fixme
     # TODO: clear() method
 
     def set(self):
-        # pylint: disable-next=fixme
         # FIXME: The _loop attribute is not documented as public api!
         self._loop.call_soon_threadsafe(super().set)
 

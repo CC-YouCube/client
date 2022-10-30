@@ -99,10 +99,17 @@ function YouCubeAPI:get_chunk(chunkindex, id)
 end
 
 function YouCubeAPI:request_media(url)
+    --local status, retval = pcall(self.websocket.send, textutils.serialiseJSON({
     self.websocket.send(textutils.serialiseJSON({
         ["action"] = "request_media",
         ["url"] = url
     }))
+
+    --if not status then
+    --    print("Lost connection to server -> Reconnection ...")
+    --    self:detect_bestest_server()
+    --    self:request_media(url)
+    --end
 end
 
 --[[
@@ -125,41 +132,7 @@ end
 local youcubeapi = YouCubeAPI.new()
 youcubeapi:detect_bestest_server()
 
-print("Enter Url or Search Term:")
-term.setTextColor(colors.lightGray)
-local url = read()
-term.setTextColor(colors.white)
-
-print("Requesting media ...")
-youcubeapi:request_media(url)
-
-local data = youcubeapi.websocket.receive()
-data = textutils.unserialiseJSON(data)
-
-if data.action == "error" then
-    error(data.message)
-end
-
-local id = data.id
-
-local chunkindex = 0
-
-youcubeapi:get_chunk(chunkindex, id)
-
-term.write("Playing: ")
-term.setTextColor(colors.lime)
-print(data.title)
-term.setTextColor(colors.white)
-
-print("Likes: " .. NumberFormatter.compact(data.like_count))
-print("Views: " .. NumberFormatter.compact(data.view_count))
-
-local x, y = term.getCursorPos()
-term.write("Chunkindex: ")
-term.setTextColor(colors.gray)
-term.write(chunkindex)
-term.setTextColor(colors.white)
-
+-------------------------------
 
 -- https://github.com/Vexatos/Computronics/blob/b0ade53cab10529dbe91ebabfa882d1b4b21fa90/src/main/resources/assets/computronics/lua/peripheral/tape_drive/programs/tape_drive/tape#L109-L123
 local function wipe()
@@ -176,63 +149,138 @@ local function wipe()
     tape.seek(-90000)
 end
 
-if speaker then
-    local dfpwm = require("cc.audio.dfpwm")
-    local decoder = dfpwm.make_decoder()
+-------------------------------
 
-    while true do
-        local chunk = youcubeapi.websocket.receive()
+local function run(url, no_close)
+    print("Requesting media ...")
+    youcubeapi:request_media(url)
 
-        if chunk == "mister, the media has finished playing" then
-            print()
-            youcubeapi.websocket.close()
-            return
-        end
+    local data = youcubeapi.websocket.receive()
+    data = textutils.unserialiseJSON(data)
 
-        local buffer = decoder(chunk)
-
-        while not speaker.playAudio(buffer) do
-            os.pullEvent("speaker_audio_empty")
-        end
-
-        chunkindex = chunkindex + 1
-
-        term.setCursorPos(x, y)
-        term.write("Chunkindex: ")
-        term.setTextColor(colors.gray)
-        term.write(chunkindex)
-        term.setTextColor(colors.white)
-
-        youcubeapi:get_chunk(chunkindex, id)
-
+    if data.action == "error" then
+        error(data.message)
     end
-else
-    tape.stop()
-    tape.seek(-tape.getSize())
-    wipe()
-    tape.setLabel(data.title)
 
-    while true do
-        local chunk = youcubeapi.websocket.receive()
+    local id = data.id
 
-        if chunk == "mister, the media has finished playing" then
-            tape.seek(-tape.getSize())
-            tape.play()
-            print()
-            youcubeapi.websocket.close()
-            return
+    local chunkindex = 0
+
+    youcubeapi:get_chunk(chunkindex, id)
+
+    term.write("Playing: ")
+    term.setTextColor(colors.lime)
+    print(data.title)
+    term.setTextColor(colors.white)
+
+    if data.like_count then
+        print("Likes: " .. NumberFormatter.compact(data.like_count))
+    end
+
+    if data.view_count then
+        print("Views: " .. NumberFormatter.compact(data.view_count))
+    end
+
+    local x, y = term.getCursorPos()
+    term.write("Chunkindex: ")
+    term.setTextColor(colors.gray)
+    term.write(chunkindex)
+    term.setTextColor(colors.white)
+
+    if speaker then
+        local dfpwm = require("cc.audio.dfpwm")
+        local decoder = dfpwm.make_decoder()
+
+        while true do
+            local chunk = youcubeapi.websocket.receive()
+
+            if chunk == "mister, the media has finished playing" then
+                print()
+
+                if data.playlist_videos then
+                    return data.playlist_videos
+                end
+
+                if no_close then
+                    return
+                end
+
+                youcubeapi.websocket.close()
+                return
+            end
+
+            local buffer = decoder(chunk)
+
+            while not speaker.playAudio(buffer) do
+                os.pullEvent("speaker_audio_empty")
+            end
+
+            chunkindex = chunkindex + 1
+
+            term.setCursorPos(x, y)
+            term.write("Chunkindex: ")
+            term.setTextColor(colors.gray)
+            term.write(chunkindex)
+            term.setTextColor(colors.white)
+
+            youcubeapi:get_chunk(chunkindex, id)
+
         end
+    else
+        tape.stop()
+        tape.seek(-tape.getSize())
+        wipe()
+        tape.setLabel(data.title)
 
-        tape.write(chunk)
+        while true do
+            local chunk = youcubeapi.websocket.receive()
 
-        chunkindex = chunkindex + 1
+            if chunk == "mister, the media has finished playing" then
+                tape.seek(-tape.getSize())
+                tape.play()
+                print()
 
-        term.setCursorPos(x, y)
-        term.write("Chunkindex: ")
-        term.setTextColor(colors.gray)
-        term.write(chunkindex)
-        term.setTextColor(colors.white)
+                -- getState 0.2.1 allow 0.1.0
+                while tape.getState() == "PLAYING" do
+                    os.pullEvent("speaker_audio_empty")
+                end
 
-        youcubeapi:get_chunk(chunkindex, id)
+                if data.playlist_videos then
+                    return data.playlist_videos
+                end
+
+                if no_close then
+                    return
+                end
+
+                youcubeapi.websocket.close()
+                return
+            end
+
+            tape.write(chunk)
+
+            chunkindex = chunkindex + 1
+
+            term.setCursorPos(x, y)
+            term.write("Chunkindex: ")
+            term.setTextColor(colors.gray)
+            term.write(chunkindex)
+            term.setTextColor(colors.white)
+
+            youcubeapi:get_chunk(chunkindex, id)
+        end
+    end
+end
+
+print("Enter Url or Search Term:")
+term.setTextColor(colors.lightGray)
+local _url = read()
+term.setTextColor(colors.white)
+
+local playlist_videos = run(_url)
+
+if playlist_videos then
+    for i, id in pairs(playlist_videos) do
+        run(id, true)
     end
 end

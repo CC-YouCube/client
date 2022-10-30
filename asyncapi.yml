@@ -71,6 +71,9 @@ components:
             examples:
               - "Never Gonna Give You Up"
               - "dQw4w9WgXcQ"
+        required:
+          - action
+          - url
 
     get_chunk:
       payload:
@@ -91,6 +94,10 @@ components:
             pattern: ^[a-zA-Z0-9-_]*$
             description: Media id
             example: "dQw4w9WgXcQ"
+        required:
+          - action
+          - chunkindex
+          - id
 
     error:
       payload:
@@ -106,6 +113,9 @@ components:
             type: string
             description: The error message
             example: "You dare not use special Characters"
+        required:
+          - action
+          - message
 
     chunk:
       payload:
@@ -143,3 +153,20 @@ components:
             description: The view count of the media
             example: 1307201506
             minimum: 0
+          playlist_videos:
+            type: array
+            description: The view count of the media
+            items:
+              type: string
+              additionalProperties: true
+              pattern: ^[a-zA-Z0-9-_]*$
+              description: The media id
+              example:
+                - "CVsbTCdTyAM"
+                - "xm3YgoEiEDc"
+        required:
+          - action
+          - id
+          - title
+          - like_count
+          - view_count
