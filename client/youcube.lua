@@ -62,7 +62,7 @@ end
 local servers = {
     "ws://localhost:5000",
     "ws://oxygen.knijn.one:5000", -- By EmmaKnijn, Contact EmmaKnijn#0043 on Discord if this doesn't work
-    "wss://youcube.onrender.com"
+    "wss://youcube.onrender.com" -- By Commandcracker
 }
 
 if settings then

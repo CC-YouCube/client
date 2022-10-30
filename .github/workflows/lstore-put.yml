@@ -13,6 +13,10 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
 
+      - name: Rename main file
+        run: |
+          mv client/youcube.lua client/main.lua
+
       - name: Publish Package
         uses: Commandcracker/lstore-put@v1
         with:
