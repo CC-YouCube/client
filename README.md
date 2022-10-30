@@ -1,6 +1,8 @@
 # YouCube
 
 [![Project license](https://img.shields.io/github/license/Commandcracker/YouCube?style=for-the-badge)](https://github.com/Commandcracker/YouCube/blob/main/LICENSE.txt)
+[![Mentioned in Awesome ComputerCraft](https://img.shields.io/badge/Mentioned%20in%20Awesome-ComputerCraft-violet?style=for-the-badge&logo=Awesome%20Lists&logoColor=white)](https://github.com/tomodachi94/awesome-computercraft)
+
 [![Spellcheck Workflow Status](https://img.shields.io/github/workflow/status/Commandcracker/YouCube/Spellcheck?label=Spell-check&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/spellcheck.yml)
 [![API documentation](https://img.shields.io/github/workflow/status/Commandcracker/YouCube/AsyncAPI%20documents%20processing?label=API%20documentation&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/asyncapi-doc.yml)
 
@@ -15,7 +17,8 @@ YouCube is a tool that streams [dfpwm](https://wiki.vexatos.com/dfpwm) files to 
 ![or](.README/slash.svg)
 [![CC: Tweaked Version: 1.80pr1.3+](https://img.shields.io/badge/CC:%20tweaked-1.80pr1.3+-green?style=for-the-badge&logo=GNOME%20Terminal)](https://tweaked.cc/)
 ![+](.README/plus.svg)
-[![Computronics Version: 0.1.0+](https://img.shields.io/badge/Computronics-0.1.0+-green?style=for-the-badge)](https://wiki.vexatos.com/wiki:computronics) \
+[![Computronics Version: 0.1.0+](https://img.shields.io/badge/Computronics-0.1.0+-green?style=for-the-badge)](https://wiki.vexatos.com/wiki:computronics)
+
 [![Lua Lint Workflow Status](https://img.shields.io/github/workflow/status/Commandcracker/YouCube/Illuaminate%20Lint?label=Lua%20Lint&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/illuaminate-lint.yml)
 [![lStore Package](https://img.shields.io/github/workflow/status/Commandcracker/YouCube/Publish%20lStore%20package?label=lStore%20Package&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/lstore-put.yml)
 
