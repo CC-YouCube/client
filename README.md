@@ -20,7 +20,6 @@ YouCube is a tool that streams [dfpwm](https://wiki.vexatos.com/dfpwm) files to 
 [![Computronics Version: 0.1.0+](https://img.shields.io/badge/Computronics-0.1.0+-green?style=for-the-badge)](https://wiki.vexatos.com/wiki:computronics)
 
 [![Lua Lint Workflow Status](https://img.shields.io/github/workflow/status/Commandcracker/YouCube/Illuaminate%20Lint?label=Lua%20Lint&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/illuaminate-lint.yml)
-[![lStore Package](https://img.shields.io/github/workflow/status/Commandcracker/YouCube/Publish%20lStore%20package?label=lStore%20Package&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/lstore-put.yml)
 
 ![preview](.README/preview-client.png)
 
@@ -50,6 +49,26 @@ If you dont want to install YouCube you can use this command:
 wget run https://raw.githubusercontent.com/Commandcracker/YouCube/main/client/youcube.lua
 ```
 
+#### UnicornPKG
+
+YouCube will be on [unicornpkg](https://unicornpkg.madefor.cc/), when it is ready.
+
+#### LevelOS / lStore
+
+[![lStore Package](https://img.shields.io/github/workflow/status/Commandcracker/YouCube/Publish%20lStore%20package?label=lStore%20Package&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/lstore-put.yml)
+
+On [LevelOS](https://discord.com/invite/vBsjGqy99U) YouCube can be installed by running `lStore get YouCube <path>` or `lStore get bpBYV1aG <path>` or by Using the StoreUI.
+
+![preview](.README/levelos.png)
+
+#### Settings
+
+Settings that can be set with the CC: Tweaked [settings module](https://tweaked.cc/module/settings.html#v:get)
+
+| name             | default | Description                      |
+|------------------|---------|----------------------------------|
+| `youcube.server` |         | First server that should be used |
+
 ### Server
 
 [![Python Version: 3.7+](https://img.shields.io/badge/Python-3.7+-green?style=for-the-badge&logo=Python&logoColor=white)](https://www.python.org/downloads/)
@@ -78,4 +97,26 @@ pip install -r server/requirements.txt
 
 ```bash
 python server/youcube.py
+```
+
+#### Environment variables
+
+Environment variables you can use to configure the server.
+
+| Variable          | Default | Description                                 |
+|-------------------|---------|---------------------------------------------|
+| `PORT`            | `5000`  | The port where the web server should run on |
+| `TRUSTED_PROXIES` |         | Trusted proxies (separated by comma`,`)     |
+
+### Docker Compose
+
+```yml
+version: "2.0"
+services:
+  youcube:
+    image: ghcr.io/commandcracker/youcube:main
+    restart: always
+    hostname: youcube
+    ports:
+      - 5000:5000
 ```
