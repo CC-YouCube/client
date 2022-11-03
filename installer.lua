@@ -11,8 +11,8 @@ License: GPL-3.0
 
 local files = {
     ["./youcube.lua"] = "https://raw.githubusercontent.com/Commandcracker/YouCube/main/client/youcube.lua",
-    ["./lib/YouCubeAPI.lua"] = "https://raw.githubusercontent.com/Commandcracker/YouCube/main/client/lib/YouCubeAPI.lua",
-    ["./lib/NumberFormatter.lua"] = "https://raw.githubusercontent.com/Commandcracker/YouCube/main/client/lib/NumberFormatter.lua"
+    ["./lib/youcubeapi.lua"] = "https://raw.githubusercontent.com/Commandcracker/YouCube/main/client/lib/youcubeapi.lua",
+    ["./lib/numberformatter.lua"] = "https://raw.githubusercontent.com/Commandcracker/YouCube/main/client/lib/numberformatter.lua"
 }
 
 if not http then
