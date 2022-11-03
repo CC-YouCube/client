@@ -8,7 +8,7 @@
 (at /
  ;; Modifications to make to the linter set. For instance, `+all -var:unused`
  ;; will enable all warnings but var:unused.
- (linters -format:table-trailing -doc:undocumented -var:unused)
+ (linters -format:table-trailing -doc:undocumented -var:unused -doc:undocumented-arg)
  
  ;; Control how the illuaminate linter works.
  (lint
@@ -16,7 +16,19 @@
    (dynamic-modules)
    
    ;; List of global variables
-   (globals :max textutils term colors http peripheral periphemu read settings)
+   (globals :max
+      textutils
+      term
+      colors
+      http
+      peripheral
+      periphemu
+      read
+      settings
+      fs
+      printError
+      shell
+    )
    
    ;; Whether tables entries should be separated by a comma (',') or semicolon (';').
    (table-separator comma)

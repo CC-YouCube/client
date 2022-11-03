@@ -1,126 +1,55 @@
 --[[
-_  _ _  _ _  _ ___  ____ ____              
-|\ | |  | |\/| |__] |___ |__/              
-| \| |__| |  | |__] |___ |  \              
-____ ____ ____ _  _ ____ ___ ___ ____ ____ 
-|___ |  | |__/ |\/| |__|  |   |  |___ |__/ 
-|    |__| |  \ |  | |  |  |   |  |___ |  \ 
+_   _ ____ _  _ ____ _  _ ___  ____
+ \_/  |  | |  | |    |  | |__] |___
+  |   |__| |__| |___ |__| |__] |___
+
+Github Repository: https://github.com/Commandcracker/YouCube
+License: GPL-3.0
+Client Version: 0.0.poc0
 ]]
 
-local NumberFormatter = {}
--- https://devforum.roblox.com/t/how-can-i-turn-a-number-to-a-shorter-number-i-dont-know-how-to-explain-click-to-understand-3/649496/3
+-- Libraries - OpenLibrarieLoader v1.0.0 --
 
-local Suffixes = { "k", "M", "B", "T", "qd", "Qn", "sx", "Sp", "O", "N", "de", "Ud", "DD", "tdD", "qdD", "QnD", "sxD",
-    "SpD", "OcD", "NvD", "Vgn", "UVg", "DVg", "TVg", "qtV", "QnV", "SeV", "SPG", "OVG", "NVG", "TGN", "UTG", "DTG",
-    "tsTG", "qtTG", "QnTG", "ssTG", "SpTG", "OcTG", "NoTG", "QdDR", "uQDR", "dQDR", "tQDR", "qdQDR", "QnQDR", "sxQDR",
-    "SpQDR", "OQDDr", "NQDDr", "qQGNT", "uQGNT", "dQGNT", "tQGNT", "qdQGNT", "QnQGNT", "sxQGNT", "SpQGNT", "OQQGNT",
-    "NQQGNT", "SXGNTL" }
-
-function NumberFormatter.compact(number)
-    local Negative = number < 0
-    number = math.abs(number)
-
-    local Paired = false
-    for i in pairs(Suffixes) do
-        if not (number >= 10 ^ (3 * i)) then
-            number = number / 10 ^ (3 * (i - 1))
-            local isComplex = string.find(tostring(number), ".") and string.sub(tostring(number), 4, 4) ~= "."
-            number = string.sub(tostring(number), 1, isComplex and 4 or 3) .. (Suffixes[i - 1] or "")
-            Paired = true
-            break
+local function is_lib(Table, Item)
+    for key, value in ipairs(Table) do
+        if value == Item or value .. ".lua" == Item then
+            return true, value
         end
     end
-    if not Paired then
-        local Rounded = math.floor(number)
-        number = tostring(Rounded)
-    end
-    if Negative then
-        return "-" .. number
-    end
-    return number -- returns 1.0k for example
+    return false
 end
 
-function NumberFormatter.abbreviate(number)
-    local left, num, right = string.match(number, '^([^%d]*%d)(%d*)(.-)$')
-    return left .. num:reverse():gsub('(%d%d%d)', '%1,'):reverse() .. right -- returns for example 1,000, it gets every 3 zeros and adds a  comma
-end
+local libs = { "youcubeapi", "numberformatter" }
+local lib_paths = { ".", "./lib", "./apis", "./modules", "/", "/lib", "/apis", "/modules" }
 
---[[
-_   _ ____ _  _ ____ _  _ ___  ____ ____ ___  _ 
- \_/  |  | |  | |    |  | |__] |___ |__| |__] | 
-  |   |__| |__| |___ |__| |__] |___ |  | |    | 
-]]
-
-local YouCubeAPI = {}
-
-function YouCubeAPI.new(websocket)
-    return setmetatable({
-        websocket = websocket,
-    }, { __index = YouCubeAPI })
-end
-
-local servers = {
-    "ws://localhost:5000",
-    "ws://oxygen.knijn.one:5000", -- By EmmaKnijn, Contact EmmaKnijn#0043 on Discord if this doesn't work
-    "wss://youcube.onrender.com" -- By Commandcracker
-}
-
-if settings then
-    local server = settings.get("youcube.server")
-    if server then
-        table.insert(servers, 1, server)
-    end
-end
-
-function YouCubeAPI:detect_bestest_server()
-    for i, server in pairs(servers) do
-        local websocket, websocket_error = http.websocket(server)
-
-        if websocket ~= false then
-            term.write("Using the YouCube server: ")
-            term.setTextColor(colors.blue)
-            print(server)
-            term.setTextColor(colors.white)
-            self.websocket = websocket
-            break
-        elseif i == #servers then
-            error(websocket_error)
+for i, path in pairs(lib_paths) do
+    if fs.exists(path) then
+        for _i, file_name in pairs(fs.list(path)) do
+            local found, lib = is_lib(libs, file_name)
+            if found and libs[lib] == nil then
+                if require then
+                    libs[lib] = require(path .. "/" .. file_name:gsub(".lua", ""))
+                else
+                    libs[lib] = dofile(path .. "/" .. file_name)
+                end
+            end
         end
-
     end
 end
 
-function YouCubeAPI:get_chunk(chunkindex, id)
-    self.websocket.send(textutils.serialiseJSON({
-        ["action"] = "get_chunk",
-        ["chunkindex"] = chunkindex,
-        ["id"] = id
-    }))
+for key, lib in ipairs(libs) do
+    if libs[lib] == nil then
+        error("Library \"" .. lib .. "\" not found")
+    end
 end
 
-function YouCubeAPI:request_media(url)
-    --local status, retval = pcall(self.websocket.send, textutils.serialiseJSON({
-    self.websocket.send(textutils.serialiseJSON({
-        ["action"] = "request_media",
-        ["url"] = url
-    }))
+-- CraftOS-PC support --
 
-    --if not status then
-    --    print("Lost connection to server -> Reconnection ...")
-    --    self:detect_bestest_server()
-    --    self:request_media(url)
-    --end
-end
-
---[[
-_  _ ____ _ _  _    ____ _    _ 
-|\/| |__| | |\ |    |    |    | 
-|  | |  | | | \|    |___ |___ | 
-]]
-
-if periphemu then -- CraftOS-PC
+if periphemu then
     periphemu.create("top", "speaker")
 end
+
+-- main --
 
 local speaker = peripheral.find("speaker")
 local tape = peripheral.find("tape_drive")
@@ -129,7 +58,7 @@ if speaker == nil and tape == nil then
     error("You need a tapedrive or speaker in order to use YouCube!")
 end
 
-local youcubeapi = YouCubeAPI.new()
+local youcubeapi = libs.youcubeapi.new()
 youcubeapi:detect_bestest_server()
 
 -------------------------------
@@ -174,11 +103,11 @@ local function run(url, no_close)
     term.setTextColor(colors.white)
 
     if data.like_count then
-        print("Likes: " .. NumberFormatter.compact(data.like_count))
+        print("Likes: " .. libs.numberformatter.compact(data.like_count))
     end
 
     if data.view_count then
-        print("Views: " .. NumberFormatter.compact(data.view_count))
+        print("Views: " .. libs.numberformatter.compact(data.view_count))
     end
 
     local x, y = term.getCursorPos()
