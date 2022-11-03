@@ -32,21 +32,13 @@ pastebin run swsmNAf7
 or
 
 ```shell
-wget https://raw.githubusercontent.com/Commandcracker/YouCube/main/client/youcube.lua
+wget run https://raw.githubusercontent.com/Commandcracker/YouCube/main/installer.lua
 ```
 
 #### Starting the Client
 
 ```text
 youcube
-```
-
-#### Trying out YouCube
-
-If you dont want to install YouCube you can use this command:
-
-```shell
-wget run https://raw.githubusercontent.com/Commandcracker/YouCube/main/client/youcube.lua
 ```
 
 #### UnicornPKG
