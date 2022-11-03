@@ -5,7 +5,7 @@ _   _ ____ _  _ ____ _  _ ___  ____
 
 Github Repository: https://github.com/Commandcracker/YouCube
 License: GPL-3.0
-Client Version: 0.0.poc0
+Client Version: 0.0.poc1
 ]]
 
 -- Libraries - OpenLibrarieLoader v1.0.0 --
@@ -21,6 +21,10 @@ end
 
 local libs = { "youcubeapi", "numberformatter" }
 local lib_paths = { ".", "./lib", "./apis", "./modules", "/", "/lib", "/apis", "/modules" }
+
+if _G.lOS then
+    table.insert(lib_paths, "/Program_Files/YouCube/lib")
+end
 
 for i, path in pairs(lib_paths) do
     if fs.exists(path) then
