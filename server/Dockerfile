@@ -7,6 +7,8 @@ COPY requirements.txt .
 ENV XDG_CACHE_HOME="/opt/server/.yt-dlp-cache"
 
 RUN set -x \
+    && apt-get update \
+    && apt-get install build-essential wget -y \
     && pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt \
     && chown 1000 /opt/server/ \
