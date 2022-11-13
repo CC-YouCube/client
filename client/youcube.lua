@@ -5,10 +5,11 @@ _   _ ____ _  _ ____ _  _ ___  ____
 
 Github Repository: https://github.com/Commandcracker/YouCube
 License: GPL-3.0
-Client Version: 0.0.poc1
+Client Version: poc0.0.0
 ]]
 
 -- Libraries - OpenLibrarieLoader v1.0.0 --
+--TODO: Optional libs - for something like JSON lib that is only needed for older CC Versions
 
 local function is_lib(Table, Item)
     for key, value in ipairs(Table) do
@@ -62,44 +63,28 @@ if speaker == nil and tape == nil then
     error("You need a tapedrive or speaker in order to use YouCube!")
 end
 
-local youcubeapi = libs.youcubeapi.new()
-youcubeapi:detect_bestest_server()
+local youcubeapi = libs.youcubeapi.API.new()
 
--------------------------------
+local audiodevice
 
--- https://github.com/Vexatos/Computronics/blob/b0ade53cab10529dbe91ebabfa882d1b4b21fa90/src/main/resources/assets/computronics/lua/peripheral/tape_drive/programs/tape_drive/tape#L109-L123
-local function wipe()
-    local size = tape.getSize()
-    tape.stop()
-    tape.seek(-size)
-    tape.stop()
-    tape.seek(-90000)
-    local s = string.rep(string.char(170), 8192)
-    for i = 1, size + 8191, 8192 do
-        tape.write(s)
-    end
-    tape.seek(-size)
-    tape.seek(-90000)
+if speaker == nil then
+    audiodevice = libs.youcubeapi.Tape.new(tape)
+else
+    audiodevice = libs.youcubeapi.Speaker.new(speaker)
 end
 
--------------------------------
+audiodevice:validate()
+youcubeapi:detect_bestest_server()
 
 local function run(url, no_close)
     print("Requesting media ...")
-    youcubeapi:request_media(url)
-
-    local data = youcubeapi.websocket.receive()
-    data = textutils.unserialiseJSON(data)
+    local data = youcubeapi:request_media(url)
 
     if data.action == "error" then
         error(data.message)
     end
 
-    local id = data.id
-
     local chunkindex = 0
-
-    youcubeapi:get_chunk(chunkindex, id)
 
     term.write("Playing: ")
     term.setTextColor(colors.lime)
@@ -120,88 +105,40 @@ local function run(url, no_close)
     term.write(chunkindex)
     term.setTextColor(colors.white)
 
-    if speaker then
-        local dfpwm = require("cc.audio.dfpwm")
-        local decoder = dfpwm.make_decoder()
+    audiodevice:reset()
+    audiodevice:setLabel(data.title)
 
-        while true do
-            local chunk = youcubeapi.websocket.receive()
+    while true do
+        local chunk = youcubeapi:get_chunk(chunkindex, data.id)
 
-            if chunk == "mister, the media has finished playing" then
-                print()
+        if chunk == "mister, the media has finished playing" then
+            audiodevice:play()
+            print()
 
-                if data.playlist_videos then
-                    return data.playlist_videos
-                end
+            if data.playlist_videos then
+                return data.playlist_videos
+            end
 
-                if no_close then
-                    return
-                end
-
-                youcubeapi.websocket.close()
+            if no_close then
                 return
             end
 
-            local buffer = decoder(chunk)
-
-            while not speaker.playAudio(buffer) do
-                os.pullEvent("speaker_audio_empty")
-            end
-
-            chunkindex = chunkindex + 1
-
-            term.setCursorPos(x, y)
-            term.write("Chunkindex: ")
-            term.setTextColor(colors.gray)
-            term.write(chunkindex)
-            term.setTextColor(colors.white)
-
-            youcubeapi:get_chunk(chunkindex, id)
-
+            youcubeapi.websocket.close()
+            return
         end
-    else
-        tape.stop()
-        tape.seek(-tape.getSize())
-        wipe()
-        tape.setLabel(data.title)
 
-        while true do
-            local chunk = youcubeapi.websocket.receive()
+        audiodevice:write(chunk)
 
-            if chunk == "mister, the media has finished playing" then
-                tape.seek(-tape.getSize())
-                tape.play()
-                print()
+        chunkindex = chunkindex + 1
 
-                -- getState 0.2.1 allow 0.1.0
-                while tape.getState() == "PLAYING" do
-                    os.pullEvent("speaker_audio_empty")
-                end
+        term.setCursorPos(x, y)
+        term.write("Chunkindex: ")
+        term.setTextColor(colors.gray)
+        term.write(chunkindex)
+        term.setTextColor(colors.white)
 
-                if data.playlist_videos then
-                    return data.playlist_videos
-                end
+        youcubeapi:get_chunk(chunkindex, data.id)
 
-                if no_close then
-                    return
-                end
-
-                youcubeapi.websocket.close()
-                return
-            end
-
-            tape.write(chunk)
-
-            chunkindex = chunkindex + 1
-
-            term.setCursorPos(x, y)
-            term.write("Chunkindex: ")
-            term.setTextColor(colors.gray)
-            term.write(chunkindex)
-            term.setTextColor(colors.white)
-
-            youcubeapi:get_chunk(chunkindex, id)
-        end
     end
 end
 

@@ -8,7 +8,8 @@
 (at /
  ;; Modifications to make to the linter set. For instance, `+all -var:unused`
  ;; will enable all warnings but var:unused.
- (linters -format:table-trailing -doc:undocumented -var:unused -doc:undocumented-arg)
+ ;; Fuck the Police ;)
+ (linters -format:table-trailing -doc:undocumented -var:unused -doc:undocumented-arg -var:unused-arg -doc:unresolved-reference)
  
  ;; Control how the illuaminate linter works.
  (lint
@@ -64,7 +65,7 @@
 ;; Controls documentation generation.
 (doc
   ;; The path(s) where modules are located. This is used for guessing the module name of files, it is ignored when an explicit @module annotation is provided.
-  (library-path client)
+  (library-path client/lib)
   
   ;; A list of custom module kinds and their display names.
   (module-kinds)
