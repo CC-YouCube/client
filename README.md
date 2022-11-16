@@ -43,7 +43,13 @@ youcube
 
 #### UnicornPKG
 
-YouCube will be on [unicornpkg](https://unicornpkg.madefor.cc/), when it is ready.
+YouCube can be installed with [unicornpkg](https://unicornpkg.madefor.cc/). \
+Just install the Dependencies and then run `hoof install youcube`
+
+##### Dependencies
+
+- `hoof install numberformatter`
+- `hoof install youcubeapi`
 
 #### LevelOS / lStore
 
