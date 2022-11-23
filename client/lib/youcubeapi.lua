@@ -2,16 +2,10 @@
     @module youcubeapi
 ]]
 
---[[
+--[[ youcubeapi.lua
 _   _ ____ _  _ ____ _  _ ___  ____ ____ ___  _
  \_/  |  | |  | |    |  | |__] |___ |__| |__] |
   |   |__| |__| |___ |__| |__] |___ |  | |    |
-
-Github Repository: https://github.com/Commandcracker/YouCube
-License: GPL-3.0
-
-Lib Version: poc0.0.0
-API Version: 0.0.poc0 (https://commandcracker.github.io/YouCube/)
 ]]
 
 --[[- "wrapper" for accessing [YouCub's API](https://commandcracker.github.io/YouCube/)
@@ -68,16 +62,36 @@ function API:detect_bestest_server()
 end
 
 --- Receive data from The YouCub Server
-function API:receive()
+-- @tparam string filter action filter
+-- @treturn table retval data
+function API:receive(filter)
     local status, retval = pcall(
         self.websocket.receive
     )
     if not status then
         print("Lost connection to server -> Reconnection ...")
         self:detect_bestest_server()
-        return self:receive()
+        return self:receive(filter)
     end
-    return retval
+
+    local data = textutils.unserialiseJSON(retval)
+
+    if data == nil then
+        error("Failed to parse message")
+    end
+
+    if filter then
+        --if type(filter) == "table" then
+        --    if not filter[data.action] then
+        --        return self:receive(filter)
+        --    end
+        --else
+        if data.action ~= filter then
+            return self:receive(filter)
+        end
+    end
+
+    return data
 end
 
 --- Send data to The YouCub Server
@@ -94,28 +108,80 @@ function API:send(data)
     end
 end
 
+--[[- [Base64](https://wikipedia.org/wiki/Base64) functions
+    @type Base64
+]]
+local Base64 = {}
+
+local b64str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+
+-- based on https://github.com/MCJack123/sanjuuni/blob/c64f8725a9f24dec656819923457717dfb964515/raw-player.lua
+--- Decode base64 string
+-- @tparam string str base64 string
+-- @treturn string string decoded string
+function Base64.decode(str)
+    local retval = ""
+    for s in str:gmatch "...." do
+        if s:sub(3, 4) == '==' then
+            retval = retval ..
+                string.char(bit32.bor(bit32.lshift(b64str:find(s:sub(1, 1)) - 1, 2),
+                    bit32.rshift(b64str:find(s:sub(2, 2)) - 1, 4)))
+        elseif s:sub(4, 4) == '=' then
+            local n = (b64str:find(s:sub(1, 1)) - 1) * 4096 + (b64str:find(s:sub(2, 2)) - 1) * 64 +
+                (b64str:find(s:sub(3, 3)) - 1)
+            retval = retval .. string.char(bit32.extract(n, 10, 8)) .. string.char(bit32.extract(n, 2, 8))
+        else
+            local n = (b64str:find(s:sub(1, 1)) - 1) * 262144 + (b64str:find(s:sub(2, 2)) - 1) * 4096 +
+                (b64str:find(s:sub(3, 3)) - 1) * 64 + (b64str:find(s:sub(4, 4)) - 1)
+            retval = retval ..
+                string.char(bit32.extract(n, 16, 8)) ..
+                string.char(bit32.extract(n, 8, 8)) .. string.char(bit32.extract(n, 0, 8))
+        end
+    end
+    return retval
+end
+
 --- Request a `16 * 1024` bit chunk
 -- @tparam number chunkindex The chunkindex
--- @tparam number id Media id
+-- @tparam string id Media id
 -- @treturn bytes chunk `16 * 1024` bit chunk
 function API:get_chunk(chunkindex, id)
     self:send({
-        ["action"] = "get_chunk",
+        ["action"]     = "get_chunk",
         ["chunkindex"] = chunkindex,
-        ["id"] = id
+        ["id"]         = id
     })
-    return self:receive()
+    return Base64.decode(self:receive("chunk").chunk)
+end
+
+--- Get 32vid
+-- @tparam number line The line to return
+-- @tparam string id Media id
+-- @tparam number width Video width
+-- @tparam number height Video height
+-- @treturn string line one line of the given 32vid
+function API:get_vid(line, id, width, height)
+    self:send({
+        ["action"] = "get_vid",
+        ["line"]   = line,
+        ["id"]     = id,
+        ["width"]  = width * 2,
+        ["height"] = height * 3
+    })
+    return self:receive("vid").line
 end
 
 --- Request media
 -- @tparam string url Url or Search Term
--- @treturn table json response
-function API:request_media(url)
+--@treturn table json response
+function API:request_media(url, width, height)
     self:send({
         ["action"] = "request_media",
-        ["url"] = url
+        ["url"]    = url,
+        ["width"]  = width * 2,
+        ["height"] = height * 3
     })
-    return textutils.unserialiseJSON(self:receive())
+    --return self:receive({ ["media"] = true, ["status"] = true })
 end
 
 --[[ handshake function coming soon
@@ -228,7 +294,7 @@ function Tape.new(tape)
     end
 
     function self:reset()
-        -- https://github.com/Vexatos/Computronics/blob/b0ade53cab10529dbe91ebabfa882d1b4b21fa90/src/main/resources/assets/computronics/lua/peripheral/tape_drive/programs/tape_drive/tape#L109-L123
+        -- based on https://github.com/Vexatos/Computronics/blob/b0ade53cab10529dbe91ebabfa882d1b4b21fa90/src/main/resources/assets/computronics/lua/peripheral/tape_drive/programs/tape_drive/tape#L109-L123
         local size = self.tape.getSize()
         self.tape.stop()
         self.tape.seek(-size)
@@ -246,8 +312,19 @@ function Tape.new(tape)
 end
 
 return {
-    API         = API,
-    AudioDevice = AudioDevice,
-    Speaker     = Speaker,
-    Tape        = Tape
+    --- "Metadata" - [YouCube API](https://commandcracker.github.io/YouCube/) Version
+    _API_VERSION = "0.0.0-poc.0.0.0",
+    --- "Metadata" - Library Version
+    _VERSION     = "0.0.0-poc.0.0.0",
+    --- "Metadata" - Description
+    _DESCRIPTION = "Library for accessing YouCub's API",
+    --- "Metadata" - Homepage / Url
+    _URL         = "https://github.com/Commandcracker/YouCube",
+    --- "Metadata" - License
+    _LICENSE     = "GPL-3.0",
+    API          = API,
+    AudioDevice  = AudioDevice,
+    Speaker      = Speaker,
+    Tape         = Tape,
+    Base64       = Base64
 }

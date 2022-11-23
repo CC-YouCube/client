@@ -14,13 +14,22 @@ import re
 import asyncio
 import threading
 from typing import Any, Callable
+from base64 import b64encode
+import subprocess
+import sys
 
 # pip modules
 import yt_dlp
 from aiohttp import web
 
+VERSION = "0.0.0-poc.0.0.0"
+API_VERSION = "0.0.0-poc.0.0.0"  # https://commandcracker.github.io/YouCube/
 CHUNK_SIZE = 16 * 1024
 DATA_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+VIDEO_FORMAT = "32vid"
+AUDIO_FORMAT = "dfpwm"
+FFMPEG_PATH = "ffmpeg" # TODO: costomizable path + checking if the path is valid
+SANJUUNI_PATH = "sanjuuni" # TODO: costomizable path + checking if the path is valid
 
 # pylint settings
 # pylint: disable=pointless-string-statement
@@ -42,20 +51,98 @@ def fix_data_fodler():
         os.mkdir(DATA_FOLDER)
 
 
-def is_already_downloaded(media_id: str) -> bool:
+def is_audio_already_downloaded(media_id: str) -> bool:
     """
-    Returns True if the given media is already downloaded
+    Returns True if the given audio is already downloaded
     """
-    return os.path.exists(os.path.join(DATA_FOLDER, media_id + ".dfpwm"))
+    return os.path.exists(os.path.join(DATA_FOLDER, f"{media_id}.{AUDIO_FORMAT}"))
 
 
-def download(url: str) -> str:
+def is_video_already_downloaded(media_id: str, width: int, height: int) -> bool:
+    """
+    Returns True if the given video is already downloaded
+    """
+    return os.path.exists(os.path.join(DATA_FOLDER, f"{media_id}({width}x{height}).{VIDEO_FORMAT}"))
+
+
+def download_video(
+    temp_dir: str,
+    media_id: str,
+    resp: web.WebSocketResponse,
+    loop,
+    width: int,
+    height: int
+):
+    """
+    Converts the downloaded video to 32vid
+    """
+    asyncio.run_coroutine_threadsafe(resp.send_json({
+        "action": "status",
+        "message": f"Converting video to {VIDEO_FORMAT} ..."
+    }), loop)
+
+    def handler(line):
+        asyncio.run_coroutine_threadsafe(resp.send_json({
+            "action": "status",
+            "message": line
+        }), loop)
+
+    returncode = run_with_live_output(
+        [
+            SANJUUNI_PATH,
+            "--width=" + str(width),
+            "--height=" + str(height),
+            "-i", os.path.join(temp_dir, os.listdir(temp_dir)[0]),
+            "--raw",
+            "-o", os.path.join(
+                DATA_FOLDER,
+                f"{media_id}({width}x{height}).{VIDEO_FORMAT}"
+            )
+        ],
+        handler
+    )
+
+    if returncode != 0:
+        asyncio.run_coroutine_threadsafe(resp.send_json({
+            "action": "error",
+            "message": "Faild to convert audio!"
+        }), loop)
+
+
+def download_audio(temp_dir: str, media_id: str, resp: web.WebSocketResponse, loop):
+    asyncio.run_coroutine_threadsafe(resp.send_json({
+        "action": "status",
+        "message": f"Converting audio to {AUDIO_FORMAT} ..."
+    }), loop)
+
+    returncode = run_with_live_output(
+        [
+            FFMPEG_PATH,
+            "-i", os.path.join(temp_dir, os.listdir(temp_dir)[0]),
+            "-f", "dfpwm",
+            "-ar", "48000",
+            "-ac", "1",
+            os.path.join(DATA_FOLDER, f"{media_id}.{AUDIO_FORMAT}")
+        ],
+        print  # TODO: handel ffmpeg output correctly
+    )
+
+    if returncode != 0:
+        asyncio.run_coroutine_threadsafe(resp.send_json({
+            "action": "error",
+            "message": "Faild to convert audio!"
+        }), loop)
+
+
+def download(url: str, resp: web.WebSocketResponse, loop, width: int, height: int) -> str:
     """
     Downloads and converts the media from the give URL
     """
     with tempfile.TemporaryDirectory(prefix="youcube-") as temp_dir:
         yt_dl_options = {
-            "format": "bestaudio/worstvideo+bestaudio/worstaudio/worstvideo+worstaudio/best",
+            # "bestaudio/worstvideo+bestaudio/worstaudio/worstvideo+worstaudio/best",
+            # "worstvideo+bestaudio",
+            "format": "mp4",
             "outtmpl": os.path.join(temp_dir, "%(id)s.%(ext)s"),
             "default_search": "auto",
             "restrictfilenames": True,
@@ -64,7 +151,10 @@ def download(url: str) -> str:
 
         yt_dl = yt_dlp.YoutubeDL(yt_dl_options)
 
-        print("STATUS: extract_info")
+        asyncio.run_coroutine_threadsafe(resp.send_json({
+            "action": "status",
+            "message": "Getting resource information ..."
+        }), loop)
 
         data = yt_dl.extract_info(url, download=False)
 
@@ -100,22 +190,24 @@ def download(url: str) -> str:
 
         fix_data_fodler()
 
-        if not is_already_downloaded(media_id):
+        audio_downloaded = is_audio_already_downloaded(media_id)
+        video_downloaded = is_video_already_downloaded(media_id, width, height)
 
-            print("STATUS: process_video_result")
+        if not audio_downloaded or not video_downloaded:
+            asyncio.run_coroutine_threadsafe(resp.send_json({
+                "action": "status",
+                "message": "Downloading resource ..."
+            }), loop)
 
             yt_dl.process_video_result(data, download=True)
 
-            print("STATUS: convert to dfpwm")
+        # TODO: Thread audio & video download
 
-            final_file = os.path.join(DATA_FOLDER, media_id + ".dfpwm")
+        if not audio_downloaded:
+            download_audio(temp_dir, media_id, resp, loop)
 
-            media_file = os.path.join(temp_dir, os.listdir(temp_dir)[0])
-
-            # TODO: use yt_dl.utils.py Popen(subprocess.Popen) for ffmpeg
-            os.system(
-                f"ffmpeg -i {media_file} -f dfpwm -ar 48000 -ac 1 {final_file}"
-            )
+        if not video_downloaded:
+            download_video(temp_dir, media_id, resp, loop, width, height)
 
     out = {
         "action": "media",
@@ -139,6 +231,7 @@ def download(url: str) -> str:
     return out
 
 
+# TODO: Colord logging + improvement to the style
 def setup_logging() -> logging.Logger:
     """
     Creates the main YouCube Logger
@@ -154,6 +247,18 @@ def setup_logging() -> logging.Logger:
     logger.addHandler(logging_handler)
 
     return logger
+
+
+def get_vid(vid_file: str, line: int) -> bytes:
+    """
+    Returns given line of 32vid file
+    """
+    with open(vid_file, "r", encoding="utf-8") as file:
+        lines = file.readlines()
+        out = lines[line]
+        file.close()
+
+    return out[:-1]  # remove \n
 
 
 def get_chunk(media_file: str, chunkindex: int) -> bytes:
@@ -256,6 +361,155 @@ async def run_function_in_thread_from_async_function(
     return event.result
 
 
+class KillableThread(threading.Thread):
+    """
+    A Thread that can be canceled by running kill on it
+    https://www.geeksforgeeks.org/python-different-ways-to-kill-a-thread/
+    """
+
+    def __init__(self, *args, **keywords):
+        threading.Thread.__init__(self, *args, **keywords)
+        self.killed = False
+
+    def start(self):
+        # pylint: disable-next=attribute-defined-outside-init
+        self.__run_backup = self.run
+        self.run = self.__run
+        threading.Thread.start(self)
+
+    def __run(self):
+        sys.settrace(self.globaltrace)
+        self.__run_backup()
+        self.run = self.__run_backup
+
+    # pylint: disable-next=unused-argument
+    def globaltrace(self, frame, event, arg):
+        if event == 'call':
+            return self.localtrace
+        return None
+
+    # pylint: disable-next=unused-argument
+    def localtrace(self, frame, event, arg):
+        if self.killed:
+            if event == 'line':
+                raise SystemExit()
+        return self.localtrace
+
+    def kill(self):
+        self.killed = True
+
+
+def run_with_live_output(cmd: list, handler: Callable[[], Any]) -> int:
+    """
+    Runs a subprocess and allows handling output live
+    """
+    with subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    ) as process:
+
+        def live_output():
+            line = ""
+            while True:
+                read = process.stderr.read(1)
+                if read in (b"\r", b"\n"):  # handle \n and \r as new line characters
+                    if line != "":  # ignore empy line
+                        handler(line)
+                    line = ""
+                else:
+                    line += read.decode("utf-8")
+
+        thread = KillableThread(target=live_output)
+        thread.start()
+
+        process.wait()
+        thread.kill()
+
+        return process.returncode
+
+# pylint: disable=unused-argument
+
+
+class Actions():
+    """
+    Default set of actions
+    Every action needs to be called with a message and needs to return a dict response
+    """
+
+    @staticmethod
+    async def request_media(message: dict, resp: web.WebSocketResponse):
+        loop = asyncio.get_event_loop()
+        # TODO: check if the width and height is not too big
+        return await run_function_in_thread_from_async_function(
+            download,
+            message.get("url"),
+            resp,
+            loop,
+            message.get("width"),
+            message.get("height")
+        )
+
+    @staticmethod
+    async def get_chunk(message: dict, resp: web.WebSocketResponse):
+        chunkindex = message.get("chunkindex")
+
+        media_id = message.get("id")
+
+        if is_id_valide(media_id):
+            file = os.path.join(
+                DATA_FOLDER,
+                message.get("id") +
+                ".dfpwm"
+            )
+
+            chunk = get_chunk(file, chunkindex)
+
+            if len(chunk) == 0:
+                return {
+                    "action": "error",
+                    "message": "mister, the media has finished playing"
+                }
+
+            return {
+                "action": "chunk",
+                "chunk": b64encode(chunk).decode("ascii")
+            }
+
+        return {
+            "action": "error",
+            "message": "You dare not use special Characters"
+        }
+
+    @staticmethod
+    async def get_vid(message: dict, resp: web.WebSocketResponse):
+        lineindex = message.get("line")
+        media_id = message.get("id")
+
+        if is_id_valide(media_id):
+            file = os.path.join(
+                DATA_FOLDER,
+                f"{message.get('id')}({message.get('width')}x{message.get('height')}).{VIDEO_FORMAT}"
+            )
+
+            return {
+                "action": "vid",
+                "line": get_vid(file, lineindex)
+            }
+
+        return {
+            "action": "error",
+            "message": "You dare not use special Characters"
+        }
+
+    @staticmethod
+    async def handshake(message: dict, resp: web.WebSocketResponse):
+        return {
+            "api-version": API_VERSION
+        }
+# pylint: enable=unused-argument
+
+
 class Server():
     """
     The Web socket server Object
@@ -264,6 +518,16 @@ class Server():
     def __init__(self, logger: logging.Logger, trusted_proxies: list) -> None:
         self.logger = logger
         self.trusted_proxies = trusted_proxies
+        self.actions = {}
+
+        # add all actions from default action set
+
+        for method in dir(Actions):
+            if not method.startswith('__'):
+                self.actions[method] = Actions.__getattribute__(
+                    Actions,
+                    method
+                )
 
     async def on_shutdown(self, app: web.Application):
         """
@@ -282,6 +546,15 @@ class Server():
         app.router.add_get("/", self.wshandler)
         app.on_shutdown.append(self.on_shutdown)
         return app
+
+    def register_action(self, name: str, func: Callable[[], Any]):
+        """
+        Add and action / "endpoint" to the ws server
+        """
+        if name in self.actions:
+            return False, f"action \"{name}\" is already registerd!"
+        self.actions[name] = func
+        return True
 
     async def wshandler(self, request: web.Request):
         """
@@ -315,38 +588,9 @@ class Server():
                     self.logger.debug(prefix + "Message: " + msg.data)
                     message: dict = json.loads(msg.data)
 
-                    if message.get("action") == "request_media":
-                        url = message.get("url")
-                        response = await run_function_in_thread_from_async_function(
-                            download,
-                            url
-                        )
+                    if message.get("action") in self.actions:
+                        response = await self.actions[message.get("action")](message, resp)
                         await resp.send_json(response)
-
-                    if message.get("action") == "get_chunk":
-                        chunkindex = message.get("chunkindex")
-
-                        media_id = message.get("id")
-
-                        if is_id_valide(media_id):
-                            file = os.path.join(
-                                DATA_FOLDER,
-                                message.get("id") +
-                                ".dfpwm"
-                            )
-
-                            chunk = get_chunk(file, chunkindex)
-
-                            if len(chunk) == 0:
-                                await resp.send_str("mister, the media has finished playing")
-                            else:
-                                await resp.send_bytes(chunk)
-
-                        else:
-                            await resp.send_json({
-                                "action": "error",
-                                "message": "You dare not use special Characters"
-                            })
 
                 else:
                     return resp

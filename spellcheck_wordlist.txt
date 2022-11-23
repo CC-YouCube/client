@@ -19,3 +19,8 @@ py
 subprocess
 utils
 yt
+bestaudio
+worstaudio
+worstvideo
+vid
+ws
