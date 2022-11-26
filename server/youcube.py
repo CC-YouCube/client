@@ -17,6 +17,8 @@ from typing import Any, Callable
 from base64 import b64encode
 import subprocess
 import sys
+import shutil
+import re
 
 # pip modules
 import yt_dlp
@@ -28,9 +30,9 @@ CHUNK_SIZE = 16 * 1024
 DATA_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 VIDEO_FORMAT = "32vid"
 AUDIO_FORMAT = "dfpwm"
-FFMPEG_PATH = "ffmpeg" # TODO: costomizable path + checking if the path is valid
-SANJUUNI_PATH = "sanjuuni" # TODO: costomizable path + checking if the path is valid
-
+FFMPEG_PATH = "ffmpeg"  # TODO: costomizable path + checking if the path is valid
+SANJUUNI_PATH = "sanjuuni"  # TODO: costomizable path + checking if the path is valid
+NO_COLOR = os.getenv("NO_COLOR")
 # pylint settings
 # pylint: disable=pointless-string-statement
 # pylint: disable=fixme
@@ -81,7 +83,14 @@ def download_video(
         "message": f"Converting video to {VIDEO_FORMAT} ..."
     }), loop)
 
+    logger = logging.getLogger(__name__)
+    if NO_COLOR:
+        prefix = "[Sanjuuni]"
+    else:
+        prefix = "\033[93m[Sanjuuni]\033[m "
+
     def handler(line):
+        logger.debug(prefix + line)
         asyncio.run_coroutine_threadsafe(resp.send_json({
             "action": "status",
             "message": line
@@ -105,7 +114,7 @@ def download_video(
     if returncode != 0:
         asyncio.run_coroutine_threadsafe(resp.send_json({
             "action": "error",
-            "message": "Faild to convert audio!"
+            "message": "Faild to convert video!"
         }), loop)
 
 
@@ -114,6 +123,16 @@ def download_audio(temp_dir: str, media_id: str, resp: web.WebSocketResponse, lo
         "action": "status",
         "message": f"Converting audio to {AUDIO_FORMAT} ..."
     }), loop)
+
+    logger = logging.getLogger(__name__)
+    if NO_COLOR:
+        prefix = "[FFmpeg]"
+    else:
+        prefix = "\033[92m[FFmpeg]\033[m "
+
+    def handler(line):
+        logger.debug(prefix + line)
+        # TODO: send message to resp
 
     returncode = run_with_live_output(
         [
@@ -124,7 +143,7 @@ def download_audio(temp_dir: str, media_id: str, resp: web.WebSocketResponse, lo
             "-ac", "1",
             os.path.join(DATA_FOLDER, f"{media_id}.{AUDIO_FORMAT}")
         ],
-        print  # TODO: handel ffmpeg output correctly
+        handler
     )
 
     if returncode != 0:
@@ -134,10 +153,75 @@ def download_audio(temp_dir: str, media_id: str, resp: web.WebSocketResponse, lo
         }), loop)
 
 
+def remove_whitespace(string):
+    return string.replace(" ", "")
+
+
+def remove_ansi_escape_codes(text: str) -> str:
+    # Remove all Ansi Escape codes
+    # 7-bit C1 ANSI sequences
+    ansi_escape_codes = re.compile(r'''
+        \x1B  # ESC
+        (?:   # 7-bit C1 Fe (except CSI)
+            [@-Z\\-_]
+        |     # or [ for CSI, followed by a control sequence
+            \[
+            [0-?]*  # Parameter bytes
+            [ -/]*  # Intermediate bytes
+            [@-~]   # Final byte
+        )
+    ''', re.VERBOSE)
+    return ansi_escape_codes.sub('', text)
+
+
+class MyLogger:
+    def __init__(self) -> None:
+        self.logger = logging.getLogger(__name__)
+        if NO_COLOR:
+            self.prefix = "[yt-dlp] "
+        else:
+            self.prefix = "\033[95m[yt-dlp]\033[0m "
+
+    def debug(self, msg):
+        # For compatibility with youtube-dl, both debug and info are passed into debug
+        # You can distinguish them by the prefix '[debug] '
+        if msg.startswith('[debug] '):
+            pass
+        else:
+            self.info(msg)
+
+    def info(self, msg):
+        self.logger.debug(self.prefix + msg)
+
+    def warning(self, msg):
+        self.logger.warning(self.prefix + msg)
+
+    def error(self, msg):
+        self.logger.error(self.prefix + msg)
+
+
 def download(url: str, resp: web.WebSocketResponse, loop, width: int, height: int) -> str:
     """
     Downloads and converts the media from the give URL
     """
+
+    # cap height and width
+
+    if width > 164:
+        width = 164
+
+    if height > 120:
+        height = 120
+
+    def my_hook(d):
+        if d.get('status') == "downloading":
+            asyncio.run_coroutine_threadsafe(resp.send_json({
+                "action": "status",
+                "message": remove_ansi_escape_codes(
+                    f"download {remove_whitespace(d.get('_percent_str'))} ETA {d.get('_eta_str')}"
+                )
+            }), loop)
+
     with tempfile.TemporaryDirectory(prefix="youcube-") as temp_dir:
         yt_dl_options = {
             # "bestaudio/worstvideo+bestaudio/worstaudio/worstvideo+worstaudio/best",
@@ -146,7 +230,9 @@ def download(url: str, resp: web.WebSocketResponse, loop, width: int, height: in
             "outtmpl": os.path.join(temp_dir, "%(id)s.%(ext)s"),
             "default_search": "auto",
             "restrictfilenames": True,
-            "extract_flat": "in_playlist"
+            "extract_flat": "in_playlist",
+            "progress_hooks": [my_hook],
+            'logger': MyLogger(),
         }
 
         yt_dl = yt_dlp.YoutubeDL(yt_dl_options)
@@ -193,7 +279,12 @@ def download(url: str, resp: web.WebSocketResponse, loop, width: int, height: in
         audio_downloaded = is_audio_already_downloaded(media_id)
         video_downloaded = is_video_already_downloaded(media_id, width, height)
 
-        if not audio_downloaded or not video_downloaded:
+        if width == None or height == None:
+            video = False
+        else:
+            video = True
+
+        if not audio_downloaded or (not video_downloaded and video):
             asyncio.run_coroutine_threadsafe(resp.send_json({
                 "action": "status",
                 "message": "Downloading resource ..."
@@ -206,7 +297,7 @@ def download(url: str, resp: web.WebSocketResponse, loop, width: int, height: in
         if not audio_downloaded:
             download_audio(temp_dir, media_id, resp, loop)
 
-        if not video_downloaded:
+        if not video_downloaded and video:
             download_video(temp_dir, media_id, resp, loop, width, height)
 
     out = {
@@ -231,19 +322,46 @@ def download(url: str, resp: web.WebSocketResponse, loop, width: int, height: in
     return out
 
 
+class ColordFormatter(logging.Formatter):
+    """Logging colored formatter, adapted from https://stackoverflow.com/a/56944256/3638629"""
+
+    # noinspection SpellCheckingInspection
+    def __init__(self, fmt=None, datefmt=None):
+        super().__init__()
+        self.fmt = fmt
+        self.datefmt = datefmt
+        self.FORMATS = {
+            logging.DEBUG: "\033[90m" + self.fmt + "\033[m",
+            logging.INFO: "\033[97m" + self.fmt + "\033[m",
+            logging.WARNING: "\033[93m" + self.fmt + "\033[m",
+            logging.ERROR: "\033[91m" + self.fmt + "\033[m",
+            logging.CRITICAL: "\033[31m" + self.fmt + "\033[m",
+        }
+
+    def format(self, record):
+        log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt, datefmt=self.datefmt)
+        return formatter.format(record)
+
+
 # TODO: Colord logging + improvement to the style
 def setup_logging() -> logging.Logger:
     """
     Creates the main YouCube Logger
     """
     logger = logging.getLogger(__name__)
-    logger.setLevel(logging.DEBUG)
-
+    log_level = os.getenv("LOGLEVEL") or logging.DEBUG
+    logger.setLevel(log_level)
     logging_handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-        fmt='[%(asctime)s %(levelname)s] [YouCube] %(message)s', datefmt="%H:%M:%S")
-    logging_handler.setFormatter(formatter)
 
+    # noinspection SpellCheckingInspection
+    if NO_COLOR:
+        formatter = logging.Formatter(
+            fmt='[%(asctime)s %(levelname)s] [YouCube] %(message)s', datefmt="%H:%M:%S")
+    else:
+        formatter = ColordFormatter(
+            fmt='[%(asctime)s %(levelname)s] ' + "\033[97m" + "[You\033[31mCube]" + "\033[m" + ' %(message)s', datefmt="%H:%M:%S")
+    logging_handler.setFormatter(formatter)
     logger.addHandler(logging_handler)
 
     return logger
@@ -253,6 +371,19 @@ def get_vid(vid_file: str, line: int) -> bytes:
     """
     Returns given line of 32vid file
     """
+
+    """
+    def get_vid(vid_file: str, tracker: int) -> bytes:
+        with open(vid_file, "r", encoding="utf-8") as file:
+            file.seek(tracker)
+            line = file.readline()
+            file.close()
+            
+    return line # new tracker = len(line) + old_tracker
+    """
+
+    # TODO: read from file.seek(tracker) tracker = size(lines[line]) + tracker
+    # TODO: linecache
     with open(vid_file, "r", encoding="utf-8") as file:
         lines = file.readlines()
         out = lines[line]
@@ -440,7 +571,6 @@ class Actions():
     @staticmethod
     async def request_media(message: dict, resp: web.WebSocketResponse):
         loop = asyncio.get_event_loop()
-        # TODO: check if the width and height is not too big
         return await run_function_in_thread_from_async_function(
             download,
             message.get("url"),
@@ -486,10 +616,21 @@ class Actions():
         lineindex = message.get("line")
         media_id = message.get("id")
 
+        # cap height and width
+
+        width = message.get('width')
+        height = message.get('height')
+
+        if width > 164:
+            width = 164
+
+        if height > 120:
+            height = 120
+
         if is_id_valide(media_id):
             file = os.path.join(
                 DATA_FOLDER,
-                f"{message.get('id')}({message.get('width')}x{message.get('height')}).{VIDEO_FORMAT}"
+                f"{message.get('id')}({width}x{height}).{VIDEO_FORMAT}"
             )
 
             return {
@@ -505,12 +646,22 @@ class Actions():
     @staticmethod
     async def handshake(message: dict, resp: web.WebSocketResponse):
         return {
-            "api-version": API_VERSION
+            "api": {
+                "version": API_VERSION
+            },
+            "capabilities": {
+                "video": [
+                    "32vid"
+                ],
+                "audio": [
+                    "dfpwm"
+                ]
+            }
         }
 # pylint: enable=unused-argument
 
 
-class Server():
+class Server:
     """
     The Web socket server Object
     """
@@ -573,7 +724,11 @@ class Server():
         try:
             request.app["sockets"].append(resp)
 
-            prefix = f"[{get_client_ip(request, self.trusted_proxies)}] "
+            if NO_COLOR:
+                prefix = f"[{get_client_ip(request, self.trusted_proxies)}] "
+            else:
+                prefix = f"\033[34m[{get_client_ip(request, self.trusted_proxies)}]\033[m "
+
             self.logger.info(prefix + "Connected!")
 
             self.logger.debug(
@@ -606,6 +761,13 @@ def main() -> None:
     Run all needed services
     """
     logger = setup_logging()
+
+    if shutil.which(FFMPEG_PATH) is None:
+        logger.warning("FFmpeg not found.")
+
+    if shutil.which(SANJUUNI_PATH) is None:
+        logger.warning("Sanjuuni not found.")
+
     port = int(os.environ.get("PORT", "5000"))
     trusted_proxies = os.environ.get("TRUSTED_PROXIES")
 
@@ -617,6 +779,9 @@ def main() -> None:
             proxies.append(proxy)
 
     server = Server(logger, proxies)
+
+    if not NO_COLOR:
+        print("\033[92m", end="")
 
     web.run_app(server.init(), port=port)
 

@@ -22,7 +22,7 @@ illuaminate-doc-gen:
 	illuaminate doc-gen
 
 cleanup:
-	rm doc server/data -Rv
+	rm doc server/data server/__pycache__ -Rv || true
 
 install-illuaminate-linux:
 	wget https://squiddev.cc/illuaminate/linux-x86-64/illuaminate -P /usr/bin
