@@ -58,6 +58,6 @@ ENV \
 
 USER 1000
 
-COPY youcube.py .
+COPY youcube/* ./
 
 ENTRYPOINT ["python3", "youcube.py"]

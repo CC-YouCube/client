@@ -103,10 +103,14 @@ python server/youcube.py
 
 Environment variables you can use to configure the server.
 
-| Variable          | Default | Description                                 |
-|-------------------|---------|---------------------------------------------|
-| `PORT`            | `5000`  | The port where the web server should run on |
-| `TRUSTED_PROXIES` |         | Trusted proxies (separated by comma`,`)     |
+| Variable          | Default    | Description                                 |
+|-------------------|------------|---------------------------------------------|
+| `PORT`            | `5000`     | The port where the web server should run on |
+| `TRUSTED_PROXIES` |            | Trusted proxies (separated by comma`,`)     |
+| `FFMPEG_PATH`     | `ffmpeg`   | Path to the FFmpeg executable               |
+| `SANJUUNI_PATH`   | `sanjuuni` | Path to the Sanjuuni executable             |
+| `NO_COLOR`        | `False`    | Disable colored output                      |
+| `LOGLEVEL`        | `DEBUG`    | Python Log level of the main logger         |
 
 ### Docker Compose
 

@@ -1,7 +1,5 @@
 *.dfpwm
 *.32vid
-server/data
 doc
 dictionary.dic
-__pycache__
 *.pyc
