@@ -177,12 +177,6 @@ class Actions:
 
             chunk = get_chunk(file, chunkindex)
 
-            if len(chunk) == 0:
-                return {
-                    "action": "error",
-                    "message": "mister, the media has finished playing"
-                }
-
             return {
                 "action": "chunk",
                 "chunk": b64encode(chunk).decode("ascii")

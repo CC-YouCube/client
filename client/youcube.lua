@@ -202,7 +202,7 @@ local function play_audio(data)
     while true do
         local chunk = youcubeapi:get_chunk(chunkindex, data.id)
 
-        if chunk == "mister, the media has finished playing" then
+        if chunk == "" then
             audiodevice:play()
             print()
 
@@ -235,29 +235,27 @@ end
 
 -- https://github.com/MCJack123/sanjuuni/blob/c64f8725a9f24dec656819923457717dfb964515/raw-player.lua
 local function play_vid(id)
-    -- line
-
     local Fwidth, Fheight = term.getSize()
     local tracker = 0
 
-    local data = youcubeapi:get_vid(tracker, id, Fwidth, Fheight)
-    tracker = tracker + #data.line + 1
+    local response = youcubeapi:get_vid(tracker, id, Fwidth, Fheight)
+    tracker = tracker + #response.line + 1
 
-    if data.line ~= "32Vid 1.1" then
+    if response.line ~= "32Vid 1.1" then
         error("Unsupported file")
     end
 
-    data = youcubeapi:get_vid(tracker, id, Fwidth, Fheight)
-    tracker = tracker + #data.line + 1
-    local fps = tonumber(data.line)
+    response = youcubeapi:get_vid(tracker, id, Fwidth, Fheight)
+    tracker = tracker + #response.line + 1
+    local fps = tonumber(response.line)
 
-    data = youcubeapi:get_vid(tracker, id, Fwidth, Fheight)
-    tracker = tracker + #data.line + 1
-    local first = data.line
+    response = youcubeapi:get_vid(tracker, id, Fwidth, Fheight)
+    tracker = tracker + #response.line + 1
+    local first = response.line
 
-    data = youcubeapi:get_vid(tracker, id, Fwidth, Fheight)
-    tracker = tracker + #data.line + 1
-    local second = data.line
+    response = youcubeapi:get_vid(tracker, id, Fwidth, Fheight)
+    tracker = tracker + #response.line + 1
+    local second = response.line
 
     if second == "" or second == nil then
         fps = 0
@@ -270,9 +268,9 @@ local function play_vid(id)
         elseif second then
             frame, second = second, nil
         else
-            data = youcubeapi:get_vid(tracker, id, Fwidth, Fheight)
-            tracker = tracker + #data.line + 1
-            frame = data.line
+            response = youcubeapi:get_vid(tracker, id, Fwidth, Fheight)
+            tracker = tracker + #response.line + 1
+            frame = response.line
         end
         if frame == "" or frame == nil then
             break
@@ -381,15 +379,11 @@ local function play(url)
     -- wait, that the user can see the video info
     sleep(2)
 
-    local function function1()
+    parallel.waitForAll(function()
         play_vid(data.id)
-    end
-
-    local function function2()
+    end, function()
         play_audio(data)
-    end
-
-    parallel.waitForAll(function1, function2)
+    end)
 
     if data.playlist_videos then
         return data.playlist_videos
