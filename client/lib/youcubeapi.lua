@@ -184,15 +184,14 @@ function API:request_media(url, width, height)
     --return self:receive({ ["media"] = true, ["status"] = true })
 end
 
---[[ handshake function coming soon
-function YouCubeAPI:handshake()
-    local version = "0.0.poc0"
-    self.websocket.send(textutils.serialiseJSON({
-        ["action"] = "handshake",
-        ["version"] = version
-    }))
+--- Handshake - get Server capabilities and version
+--@treturn table json response
+function API:handshake()
+    self:send({
+        ["action"] = "handshake"
+    })
+    return self:receive("handshake")
 end
-]]
 
 --[[- Abstraction for Audio Devices
     @type AudioDevice

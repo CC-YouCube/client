@@ -209,11 +209,11 @@ class Actions:
     async def get_vid(message: dict, resp: WebSocketResponse):
         # get "line"
         lineindex = message.get("line")
-        if error := assert_resp("line", lineindex, str): return error
+        if error := assert_resp("line", lineindex, int): return error
 
         # get "id"
         media_id = message.get("id")
-        if error := assert_resp("id", id, int): return error
+        if error := assert_resp("id", media_id, str): return error
 
         # get "width"
         width = message.get('width')
@@ -245,6 +245,10 @@ class Actions:
     @staticmethod
     async def handshake(message: dict, resp: WebSocketResponse):
         return {
+            "action": "handshake",
+            "server": {
+                "version": VERSION
+            },
             "api": {
                 "version": API_VERSION
             },

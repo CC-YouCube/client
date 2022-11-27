@@ -5,8 +5,9 @@ _   _ ____ _  _ ____ _  _ ___  ____
 
 Github Repository: https://github.com/Commandcracker/YouCube
 License: GPL-3.0
-Client Version: 0.0.0-poc.0.0.0
 ]]
+
+local _VERSION = "0.0.0-poc.0.0.0"
 
 -- Libraries - OpenLibrarieLoader v1.0.0 --
 --TODO: Optional libs - for something like JSON lib that is only needed for older CC Versions
@@ -20,7 +21,7 @@ local function is_lib(Table, Item)
     return false
 end
 
-local libs = { "youcubeapi", "numberformatter" }
+local libs = { "youcubeapi", "numberformatter", "semver" }
 local lib_paths = { ".", "./lib", "./apis", "./modules", "/", "/lib", "/apis", "/modules" }
 
 if _G.lOS then
@@ -75,6 +76,116 @@ end
 
 audiodevice:validate()
 youcubeapi:detect_bestest_server()
+
+
+-- update check --
+
+
+local function get_versions()
+    local url = "https://raw.githubusercontent.com/Commandcracker/YouCube/sanjuuni-support/versions.json"
+
+    -- Check if the URL is valid
+    local ok, err = http.checkURL(url)
+    if not ok then
+        printError("Invalid Update URL.", "\"" .. url .. "\" ", err)
+        return
+    end
+
+    local response, http_err = http.get(url, nil, true)
+    if not response then
+        printError("Failed to retreat data from update URL. \"" .. url .. "\" (" .. http_err .. ")")
+        return
+    end
+
+    local sResponse = response.readAll()
+    response.close()
+
+    return textutils.unserialiseJSON(sResponse)
+end
+
+local function write_outdated(current, latest)
+    if libs.semver(current) ^ libs.semver(latest) then
+        term.setTextColor(colors.yellow)
+    else
+        term.setTextColor(colors.red)
+    end
+
+    term.write(current)
+    term.setTextColor(colors.lightGray)
+    term.write(" -> ")
+    term.setTextColor(colors.lime)
+    term.write(latest)
+    term.setTextColor(colors.white)
+end
+
+local function can_update(name, current, latest)
+    if libs.semver(current) < libs.semver(latest) then
+        term.write(name .. " ")
+
+        write_outdated(current, latest)
+        print()
+    end
+end
+
+local function update_checker()
+    local versions = get_versions()
+    if versions == nil then return end
+
+    can_update(
+        "youcube",
+        _VERSION,
+        versions.client.version
+    )
+    can_update(
+        "youcubeapi",
+        libs.youcubeapi._VERSION,
+        versions.client.libraries.youcubeapi.version
+    )
+    can_update(
+        "numberformatter",
+        libs.numberformatter._VERSION,
+        versions.client.libraries.numberformatter.version
+    )
+    can_update(
+        "semver",
+        tostring(libs.semver._VERSION),
+        versions.client.libraries.semver.version
+    )
+
+    local handshake = youcubeapi:handshake()
+
+    if libs.semver(handshake.server.version) < libs.semver(versions.server.version) then
+        print("Tell the server owner to update their server!")
+        write_outdated(handshake.server.version, versions.server.version)
+        print()
+    end
+
+    if not libs.semver(libs.youcubeapi._API_VERSION) ^ libs.semver(handshake.api.version) then
+        print("Client is not compatible with server")
+        term.setTextColor(colors.red)
+        term.write(libs.youcubeapi._API_VERSION)
+        term.setTextColor(colors.lightGray)
+        term.write(" ^ ")
+        term.setTextColor(colors.red)
+        term.write(handshake.api.version)
+        term.setTextColor(colors.white)
+        print()
+    end
+
+    if libs.semver(libs.youcubeapi._API_VERSION) < libs.semver(versions.api.version) then
+        print("Your client is using an outdated API version")
+        write_outdated(libs.youcubeapi._API_VERSION, versions.api.version)
+        print()
+    end
+
+    if libs.semver(handshake.api.version) < libs.semver(versions.api.version) then
+        print("The server is using an outdated API version")
+        write_outdated(libs.youcubeapi._API_VERSION, versions.api.version)
+        print()
+    end
+end
+
+update_checker()
 
 local function play_audio(data)
     local chunkindex = 0
@@ -200,7 +311,6 @@ local function play(url)
 
     local data
     local x, y = term.getCursorPos()
-    term.setCursorPos(x, y)
 
     repeat
         data = youcubeapi:receive()
@@ -211,6 +321,7 @@ local function play(url)
             term.setTextColor(colors.green)
             term.write(data.message)
             term.setTextColor(colors.white)
+        else
             print()
         end
     until data.action == "media"
