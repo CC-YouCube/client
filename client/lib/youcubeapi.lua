@@ -160,15 +160,15 @@ end
 -- @tparam number width Video width
 -- @tparam number height Video height
 -- @treturn string line one line of the given 32vid
-function API:get_vid(line, id, width, height)
+function API:get_vid(tracker, id, width, height)
     self:send({
-        ["action"] = "get_vid",
-        ["line"]   = line,
-        ["id"]     = id,
-        ["width"]  = width * 2,
-        ["height"] = height * 3
+        ["action"]  = "get_vid",
+        ["tracker"] = tracker,
+        ["id"]      = id,
+        ["width"]   = width * 2,
+        ["height"]  = height * 3
     })
-    return self:receive("vid").line
+    return self:receive("vid")
 end
 
 --- Request media

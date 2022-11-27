@@ -235,27 +235,52 @@ end
 
 -- https://github.com/MCJack123/sanjuuni/blob/c64f8725a9f24dec656819923457717dfb964515/raw-player.lua
 local function play_vid(id)
+    -- line
+
     local Fwidth, Fheight = term.getSize()
-    local lineindex = 0
-    if youcubeapi:get_vid(lineindex, id, Fwidth, Fheight) ~= "32Vid 1.1" then error("Unsupported file") end
-    lineindex = lineindex + 1
-    local fps = tonumber(youcubeapi:get_vid(lineindex, id, Fwidth, Fheight))
-    lineindex = lineindex + 1
-    local first, second = youcubeapi:get_vid(lineindex, id, Fwidth, Fheight),
-        youcubeapi:get_vid(lineindex + 1, id, Fwidth, Fheight)
-    lineindex = lineindex + 2
-    if second == "" or second == nil then fps = 0 end
+    local tracker = 0
+
+    local data = youcubeapi:get_vid(tracker, id, Fwidth, Fheight)
+    tracker = tracker + #data.line + 1
+
+    if data.line ~= "32Vid 1.1" then
+        error("Unsupported file")
+    end
+
+    data = youcubeapi:get_vid(tracker, id, Fwidth, Fheight)
+    tracker = tracker + #data.line + 1
+    local fps = tonumber(data.line)
+
+    data = youcubeapi:get_vid(tracker, id, Fwidth, Fheight)
+    tracker = tracker + #data.line + 1
+    local first = data.line
+
+    data = youcubeapi:get_vid(tracker, id, Fwidth, Fheight)
+    tracker = tracker + #data.line + 1
+    local second = data.line
+
+    if second == "" or second == nil then
+        fps = 0
+    end
     term.clear()
     while true do
         local frame
-        if first then frame, first = first, nil
-        elseif second then frame, second = second, nil
-        else frame = youcubeapi:get_vid(lineindex, id, Fwidth, Fheight)
-            lineindex = lineindex + 1
+        if first then
+            frame, first = first, nil
+        elseif second then
+            frame, second = second, nil
+        else
+            data = youcubeapi:get_vid(tracker, id, Fwidth, Fheight)
+            tracker = tracker + #data.line + 1
+            frame = data.line
         end
-        if frame == "" or frame == nil then break end
+        if frame == "" or frame == nil then
+            break
+        end
         local mode = frame:match("^!CP([CD])")
-        if not mode then error("Invalid file") end
+        if not mode then
+            error("Invalid file")
+        end
         local b64data
         if mode == "C" then
             local len = tonumber(frame:sub(5, 8), 16)
@@ -275,7 +300,9 @@ local function play_vid(id)
             for x = 1, width do
                 text[y] = text[y] .. c
                 n = n - 1
-                if n == 0 then c, n, pos = string.unpack("c1B", data, pos) end
+                if n == 0 then
+                    c, n, pos = string.unpack("c1B", data, pos)
+                end
             end
         end
         c = c:byte()
@@ -284,7 +311,9 @@ local function play_vid(id)
             for x = 1, width do
                 fg, bg = fg .. ("%x"):format(bit32.band(c, 0x0F)), bg .. ("%x"):format(bit32.rshift(c, 4))
                 n = n - 1
-                if n == 0 then c, n, pos = string.unpack("BB", data, pos) end
+                if n == 0 then
+                    c, n, pos = string.unpack("BB", data, pos)
+                end
             end
             term.setCursorPos(1, y)
             term.blit(text[y], fg, bg)
@@ -295,10 +324,16 @@ local function play_vid(id)
             r, g, b, pos = string.unpack("BBB", data, pos)
             term.setPaletteColor(2 ^ i, r / 255, g / 255, b / 255)
         end
-        if fps == 0 then read() break
-        else sleep(1 / fps) end
+        if fps == 0 then
+            read()
+            break
+        else
+            sleep(1 / fps)
+        end
     end
-    for i = 0, 15 do term.setPaletteColor(2 ^ i, term.nativePaletteColor(2 ^ i)) end
+    for i = 0, 15 do
+        term.setPaletteColor(2 ^ i, term.nativePaletteColor(2 ^ i))
+    end
     term.setBackgroundColor(colors.black)
     term.setTextColor(colors.white)
     term.clear()

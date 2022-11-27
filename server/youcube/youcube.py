@@ -16,6 +16,7 @@ from typing import Any, Callable
 from base64 import b64encode
 from shutil import which
 from types import UnionType
+from time import time
 
 # pip modules
 from aiohttp.web import (
@@ -49,28 +50,16 @@ CHUNK_SIZE = 16 * 1024
 # pylint: disable=multiple-statements
 
 
-def get_vid(vid_file: str, line: int) -> bytes:
+def get_vid(vid_file: str, tracker: int) -> bytes:
     """
     Returns given line of 32vid file
     """
-
-    """
-    def get_vid(vid_file: str, tracker: int) -> bytes:
-        with open(vid_file, "r", encoding="utf-8") as file:
-            file.seek(tracker)
-            line = file.readline()
-            file.close()
-    return line # new tracker = len(line) + old_tracker
-    """
-
-    # TODO: read from file.seek(tracker) tracker = size(lines[line]) + tracker
-    # TODO: linecache
     with open(vid_file, "r", encoding="utf-8") as file:
-        lines = file.readlines()
-        out = lines[line]
+        file.seek(tracker)
+        line = file.readline()
         file.close()
 
-    return out[:-1]  # remove \n
+    return line[:-1]  # remove \n
 
 
 def get_chunk(media_file: str, chunkindex: int) -> bytes:
@@ -208,8 +197,8 @@ class Actions:
     @staticmethod
     async def get_vid(message: dict, resp: WebSocketResponse):
         # get "line"
-        lineindex = message.get("line")
-        if error := assert_resp("line", lineindex, int): return error
+        tracker = message.get("tracker")
+        if error := assert_resp("tracker", tracker, int): return error
 
         # get "id"
         media_id = message.get("id")
@@ -234,7 +223,7 @@ class Actions:
 
             return {
                 "action": "vid",
-                "line": get_vid(file, lineindex)
+                "line": get_vid(file, tracker)
             }
 
         return {
