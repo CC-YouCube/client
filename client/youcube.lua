@@ -185,9 +185,82 @@ local function update_checker()
     end
 end
 
+local Filler = {}
+
+function Filler.new()
+    local self = {}
+    function self:next() end
+
+    return self
+end
+
+local AudioFiller = {}
+
+function AudioFiller.new(id)
+    local self = {
+        id         = id,
+        chunkindex = 0
+    }
+
+    function self:next()
+        local response = youcubeapi:get_chunk(self.chunkindex, self.id)
+        self.chunkindex = self.chunkindex + 1
+        return response
+    end
+
+    return self
+end
+
+local VideoFiller = {}
+
+function VideoFiller.new(id, width, height)
+    local self = {
+        id      = id,
+        width   = width,
+        height  = height,
+        tracker = 0
+    }
+
+    function self:next()
+        local response = youcubeapi:get_vid(self.tracker, self.id, self.width, self.height)
+        self.tracker = self.tracker + #response.line + 1
+        return response.line
+    end
+
+    return self
+end
+
+local Buffer = {}
+
+function Buffer.new(filler, size)
+    local self = {
+        filler = filler,
+        size   = size
+    }
+    self.buffer = {}
+
+    function self:next()
+        while #self.buffer == 0 do os.pullEvent() end -- Wait until next is available
+        local next = self.buffer[1]
+        table.remove(self.buffer, 1)
+        return next
+    end
+
+    function self:fill()
+        if #self.buffer < self.size then
+            table.insert(self.buffer, filler:next())
+            return true
+        end
+        return false
+    end
+
+    return self
+end
+
 update_checker()
 
-local function play_audio(data)
+local function play_audio(buffer, title)
+    --[[
     local chunkindex = 0
 
     local x, y = term.getCursorPos()
@@ -195,12 +268,18 @@ local function play_audio(data)
     term.setTextColor(colors.gray)
     term.write(chunkindex)
     term.setTextColor(colors.white)
+    ]]
 
     audiodevice:reset()
-    audiodevice:setLabel(data.title)
+    audiodevice:setLabel(title)
 
     while true do
-        local chunk = youcubeapi:get_chunk(chunkindex, data.id)
+        local chunk = buffer:next()
+
+        -- Adjust buffer size on first chunk
+        if buffer.filler.chunkindex == 1 then
+            buffer.size = math.ceil(1024 / (#chunk / 16))
+        end
 
         if chunk == "" then
             audiodevice:play()
@@ -220,8 +299,6 @@ local function play_audio(data)
 
         audiodevice:write(chunk)
 
-        chunkindex = chunkindex + 1
-
         --[[
         term.setCursorPos(x, y)
         term.write("Chunkindex: ")
@@ -233,44 +310,38 @@ local function play_audio(data)
     end
 end
 
--- https://github.com/MCJack123/sanjuuni/blob/c64f8725a9f24dec656819923457717dfb964515/raw-player.lua
-local function play_vid(id)
+-- based on https://github.com/MCJack123/sanjuuni/blob/c64f8725a9f24dec656819923457717dfb964515/raw-player.lua
+-- and https://github.com/MCJack123/sanjuuni/blob/30dcabb4b56f1eb32c88e1bce384b0898367ebda/websocket-player.lua
+local function play_vid(buffer)
     local Fwidth, Fheight = term.getSize()
     local tracker = 0
 
-    local response = youcubeapi:get_vid(tracker, id, Fwidth, Fheight)
-    tracker = tracker + #response.line + 1
-
-    if response.line ~= "32Vid 1.1" then
+    if buffer:next() ~= "32Vid 1.1" then
         error("Unsupported file")
     end
 
-    response = youcubeapi:get_vid(tracker, id, Fwidth, Fheight)
-    tracker = tracker + #response.line + 1
-    local fps = tonumber(response.line)
+    local fps = tonumber(buffer:next())
+    -- Adjust buffer size
+    buffer.size = math.ceil(fps) * 2
 
-    response = youcubeapi:get_vid(tracker, id, Fwidth, Fheight)
-    tracker = tracker + #response.line + 1
-    local first = response.line
-
-    response = youcubeapi:get_vid(tracker, id, Fwidth, Fheight)
-    tracker = tracker + #response.line + 1
-    local second = response.line
+    local first, second = buffer:next(), buffer:next()
 
     if second == "" or second == nil then
         fps = 0
     end
     term.clear()
+
+    local start = os.epoch "utc"
+    local frame_count = 0
     while true do
+        frame_count = frame_count + 1
         local frame
         if first then
             frame, first = first, nil
         elseif second then
             frame, second = second, nil
         else
-            response = youcubeapi:get_vid(tracker, id, Fwidth, Fheight)
-            tracker = tracker + #response.line + 1
-            frame = response.line
+            frame = buffer:next()
         end
         if frame == "" or frame == nil then
             break
@@ -326,7 +397,7 @@ local function play_vid(id)
             read()
             break
         else
-            sleep(1 / fps)
+            while os.epoch "utc" < start + (frame_count + 1) / fps * 1000 do sleep(1 / fps) end
         end
     end
     for i = 0, 15 do
@@ -379,11 +450,44 @@ local function play(url)
     -- wait, that the user can see the video info
     sleep(2)
 
-    parallel.waitForAll(function()
-        play_vid(data.id)
-    end, function()
-        play_audio(data)
-    end)
+    local video_buffer = Buffer.new(
+        VideoFiller.new(data.id, term.getSize()),
+        --[[
+            Most videos run on 30 fps, so we store 2s of video.
+        ]]
+        60
+    )
+
+    local audio_buffer = Buffer.new(
+        AudioFiller.new(data.id),
+        --[[
+            We want to buffer 1024 chunks.
+            One chunks is 16 bits.
+            The server (with default settings) sends 32 chunks at once.
+        ]]
+        32
+    )
+
+    parallel.waitForAll(
+        function()
+            -- Fill Buffers
+            while true do
+                os.queueEvent("buffer_audio_and_video")
+                os.pullEvent()
+
+                audio_buffer:fill()
+                video_buffer:fill()
+
+                -- TODO: exit when play_vid and play_audio over
+            end
+        end,
+        function()
+            play_vid(video_buffer)
+        end,
+        function()
+            play_audio(audio_buffer, data.title)
+        end
+    )
 
     if data.playlist_videos then
         return data.playlist_videos

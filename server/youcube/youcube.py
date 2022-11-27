@@ -41,7 +41,17 @@ from yc_utils import (
 
 VERSION = "0.0.0-poc.0.0.0"
 API_VERSION = "0.0.0-poc.0.0.0"  # https://commandcracker.github.io/YouCube/
-CHUNK_SIZE = 16 * 1024
+
+# one dfpwm chunk is 16 bits
+CHUNK_SIZE = 16
+
+"""
+CHUNKS_AT_ONCE should not be too big, [CHUNK_SIZE * 1024]
+because then the CC Computer cant decode the string fast enough!
+Also, it should not be too small because then the client would need to send thousands of WS messages
+and that would also slow everything down! [CHUNK_SIZE * 1]
+"""
+CHUNKS_AT_ONCE = CHUNK_SIZE * 32
 
 # pylint settings
 # pylint: disable=pointless-string-statement
@@ -66,8 +76,8 @@ def get_chunk(media_file: str, chunkindex: int) -> bytes:
     Returns a chunk of the given media file
     """
     with open(media_file, "rb") as file:
-        file.seek(chunkindex * CHUNK_SIZE)
-        chunk = file.read(CHUNK_SIZE)
+        file.seek(chunkindex * CHUNKS_AT_ONCE)
+        chunk = file.read(CHUNKS_AT_ONCE)
         file.close()
 
     return chunk
