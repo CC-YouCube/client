@@ -16,7 +16,6 @@ from typing import Any, Callable
 from base64 import b64encode
 from shutil import which
 from types import UnionType
-from time import time
 
 # pip modules
 from aiohttp.web import (
