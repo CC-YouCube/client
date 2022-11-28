@@ -82,7 +82,7 @@ youcubeapi:detect_bestest_server()
 
 
 local function get_versions()
-    local url = "https://raw.githubusercontent.com/Commandcracker/YouCube/sanjuuni-support/versions.json"
+    local url = "https://raw.githubusercontent.com/Commandcracker/YouCube/main/versions.json"
 
     -- Check if the URL is valid
     local ok, err = http.checkURL(url)
