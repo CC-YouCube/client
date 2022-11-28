@@ -218,7 +218,7 @@ function AudioDevice.new(object)
     return self
 end
 
---[[- AudioDevice from a Speaker
+--[[- @{AudioDevice} from a Speaker
     @type Speaker
     @usage Example:
 
@@ -237,7 +237,7 @@ end
 
 --- Create's a new Tape instance.
 -- @tparam speaker speaker The speaker
--- @treturn AudioDevice instance
+-- @treturn AudioDevice|Speaker instance
 function Speaker.new(speaker)
     local self = AudioDevice.new { speaker = speaker }
 
@@ -257,7 +257,7 @@ function Speaker.new(speaker)
     return self
 end
 
---[[- AudioDevice from a [Computronics tape_drive](https://wiki.vexatos.com/wiki:computronics:tape)
+--[[- @{AudioDevice} from a [Computronics tape_drive](https://wiki.vexatos.com/wiki:computronics:tape)
     @type Tape
     @usage Example:
 
@@ -269,7 +269,7 @@ local Tape = {}
 
 --- Create's a new Tape instance.
 -- @tparam tape tape The tape_drive
--- @treturn AudioDevice instance
+-- @treturn AudioDevice|Tape instance
 function Tape.new(tape)
     local self = AudioDevice.new { tape = tape }
 
@@ -310,6 +310,211 @@ function Tape.new(tape)
     return self
 end
 
+--[[- Abstract object for filling a @{Buffer}
+    @type Filler
+]]
+local Filler = {}
+
+--- Create's a new Filler instance.
+-- @treturn Filler instance
+function Filler.new()
+    local self = {}
+    function self:next() end
+
+    return self
+end
+
+--[[- @{Filler} for Audio
+    @type AudioFiller
+]]
+local AudioFiller = {}
+
+--- Create's a new AudioFiller instance.
+-- @tparam API youcubeapi API object
+-- @tparam string id Media id
+-- @treturn AudioFiller|Filler instance
+function AudioFiller.new(youcubeapi, id)
+    local self = {
+        id         = id,
+        chunkindex = 0,
+        youcubeapi = youcubeapi
+    }
+
+    function self:next()
+        local response = self.youcubeapi:get_chunk(self.chunkindex, self.id)
+        self.chunkindex = self.chunkindex + 1
+        return response
+    end
+
+    return self
+end
+
+--[[- @{Filler} for Video
+    @type VideoFiller
+]]
+local VideoFiller = {}
+
+--- Create's a new VideoFiller instance.
+-- @tparam API youcubeapi API object
+-- @tparam string id Media id
+-- @tparam number width Video width
+-- @tparam number height Video height
+-- @treturn VideoFiller|Filler instance
+function VideoFiller.new(youcubeapi, id, width, height)
+    local self = {
+        id         = id,
+        width      = width,
+        height     = height,
+        tracker    = 0,
+        youcubeapi = youcubeapi
+    }
+
+    function self:next()
+        local response = self.youcubeapi:get_vid(self.tracker, self.id, self.width, self.height)
+        self.tracker = self.tracker + #response.line + 1
+        return response.line
+    end
+
+    return self
+end
+
+--[[- Buffers Data
+    @type Buffer
+]]
+local Buffer = {}
+
+--- Create's a new Buffer instance.
+-- @tparam Filler filler filler instance
+-- @tparam number size buffer limit
+-- @treturn Buffer instance
+function Buffer.new(filler, size)
+    local self = {
+        filler = filler,
+        size   = size
+    }
+    self.buffer = {}
+
+    function self:next()
+        while #self.buffer == 0 do os.pullEvent() end -- Wait until next is available
+        local next = self.buffer[1]
+        table.remove(self.buffer, 1)
+        return next
+    end
+
+    function self:fill()
+        if #self.buffer < self.size then
+            table.insert(self.buffer, filler:next())
+            return true
+        end
+        return false
+    end
+
+    return self
+end
+
+--[[- Create's a new Buffer instance.
+
+    Based on [sanjuuni/raw-player.lua](https://github.com/MCJack123/sanjuuni/blob/c64f8725a9f24dec656819923457717dfb964515/raw-player.lua)
+    and [sanjuuni/websocket-player.lua](https://github.com/MCJack123/sanjuuni/blob/30dcabb4b56f1eb32c88e1bce384b0898367ebda/websocket-player.lua)
+    @tparam Buffer buffer filled with frames
+]]
+local function play_vid(buffer)
+    local Fwidth, Fheight = term.getSize()
+    local tracker = 0
+
+    if buffer:next() ~= "32Vid 1.1" then
+        error("Unsupported file")
+    end
+
+    local fps = tonumber(buffer:next())
+    -- Adjust buffer size
+    buffer.size = math.ceil(fps) * 2
+
+    local first, second = buffer:next(), buffer:next()
+
+    if second == "" or second == nil then
+        fps = 0
+    end
+    term.clear()
+
+    local start = os.epoch "utc"
+    local frame_count = 0
+    while true do
+        frame_count = frame_count + 1
+        local frame
+        if first then
+            frame, first = first, nil
+        elseif second then
+            frame, second = second, nil
+        else
+            frame = buffer:next()
+        end
+        if frame == "" or frame == nil then
+            break
+        end
+        local mode = frame:match("^!CP([CD])")
+        if not mode then
+            error("Invalid file")
+        end
+        local b64data
+        if mode == "C" then
+            local len = tonumber(frame:sub(5, 8), 16)
+            b64data = frame:sub(9, len + 8)
+        else
+            local len = tonumber(frame:sub(5, 16), 16)
+            b64data = frame:sub(17, len + 16)
+        end
+        local data = Base64.decode(b64data)
+        -- TODO: maybe verify checksums?
+        assert(data:sub(1, 4) == "\0\0\0\0" and data:sub(9, 16) == "\0\0\0\0\0\0\0\0", "Invalid file")
+        local width, height = ("HH"):unpack(data, 5)
+        local c, n, pos = string.unpack("c1B", data, 17)
+        local text = {}
+        for y = 1, height do
+            text[y] = ""
+            for x = 1, width do
+                text[y] = text[y] .. c
+                n = n - 1
+                if n == 0 then
+                    c, n, pos = string.unpack("c1B", data, pos)
+                end
+            end
+        end
+        c = c:byte()
+        for y = 1, height do
+            local fg, bg = "", ""
+            for x = 1, width do
+                fg, bg = fg .. ("%x"):format(bit32.band(c, 0x0F)), bg .. ("%x"):format(bit32.rshift(c, 4))
+                n = n - 1
+                if n == 0 then
+                    c, n, pos = string.unpack("BB", data, pos)
+                end
+            end
+            term.setCursorPos(1, y)
+            term.blit(text[y], fg, bg)
+        end
+        pos = pos - 2
+        local r, g, b
+        for i = 0, 15 do
+            r, g, b, pos = string.unpack("BBB", data, pos)
+            term.setPaletteColor(2 ^ i, r / 255, g / 255, b / 255)
+        end
+        if fps == 0 then
+            read()
+            break
+        else
+            while os.epoch "utc" < start + (frame_count + 1) / fps * 1000 do sleep(1 / fps) end
+        end
+    end
+    for i = 0, 15 do
+        term.setPaletteColor(2 ^ i, term.nativePaletteColor(2 ^ i))
+    end
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
+    term.clear()
+    term.setCursorPos(1, 1)
+end
+
 return {
     --- "Metadata" - [YouCube API](https://commandcracker.github.io/YouCube/) Version
     _API_VERSION = "0.0.0-poc.0.0.0",
@@ -325,5 +530,10 @@ return {
     AudioDevice  = AudioDevice,
     Speaker      = Speaker,
     Tape         = Tape,
-    Base64       = Base64
+    Base64       = Base64,
+    Filler       = Filler,
+    AudioFiller  = AudioFiller,
+    VideoFiller  = VideoFiller,
+    Buffer       = Buffer,
+    play_vid     = play_vid
 }

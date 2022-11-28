@@ -185,78 +185,6 @@ local function update_checker()
     end
 end
 
-local Filler = {}
-
-function Filler.new()
-    local self = {}
-    function self:next() end
-
-    return self
-end
-
-local AudioFiller = {}
-
-function AudioFiller.new(id)
-    local self = {
-        id         = id,
-        chunkindex = 0
-    }
-
-    function self:next()
-        local response = youcubeapi:get_chunk(self.chunkindex, self.id)
-        self.chunkindex = self.chunkindex + 1
-        return response
-    end
-
-    return self
-end
-
-local VideoFiller = {}
-
-function VideoFiller.new(id, width, height)
-    local self = {
-        id      = id,
-        width   = width,
-        height  = height,
-        tracker = 0
-    }
-
-    function self:next()
-        local response = youcubeapi:get_vid(self.tracker, self.id, self.width, self.height)
-        self.tracker = self.tracker + #response.line + 1
-        return response.line
-    end
-
-    return self
-end
-
-local Buffer = {}
-
-function Buffer.new(filler, size)
-    local self = {
-        filler = filler,
-        size   = size
-    }
-    self.buffer = {}
-
-    function self:next()
-        while #self.buffer == 0 do os.pullEvent() end -- Wait until next is available
-        local next = self.buffer[1]
-        table.remove(self.buffer, 1)
-        return next
-    end
-
-    function self:fill()
-        if #self.buffer < self.size then
-            table.insert(self.buffer, filler:next())
-            return true
-        end
-        return false
-    end
-
-    return self
-end
-
 update_checker()
 
 local function play_audio(buffer, title)
@@ -310,105 +238,6 @@ local function play_audio(buffer, title)
     end
 end
 
--- based on https://github.com/MCJack123/sanjuuni/blob/c64f8725a9f24dec656819923457717dfb964515/raw-player.lua
--- and https://github.com/MCJack123/sanjuuni/blob/30dcabb4b56f1eb32c88e1bce384b0898367ebda/websocket-player.lua
-local function play_vid(buffer)
-    local Fwidth, Fheight = term.getSize()
-    local tracker = 0
-
-    if buffer:next() ~= "32Vid 1.1" then
-        error("Unsupported file")
-    end
-
-    local fps = tonumber(buffer:next())
-    -- Adjust buffer size
-    buffer.size = math.ceil(fps) * 2
-
-    local first, second = buffer:next(), buffer:next()
-
-    if second == "" or second == nil then
-        fps = 0
-    end
-    term.clear()
-
-    local start = os.epoch "utc"
-    local frame_count = 0
-    while true do
-        frame_count = frame_count + 1
-        local frame
-        if first then
-            frame, first = first, nil
-        elseif second then
-            frame, second = second, nil
-        else
-            frame = buffer:next()
-        end
-        if frame == "" or frame == nil then
-            break
-        end
-        local mode = frame:match("^!CP([CD])")
-        if not mode then
-            error("Invalid file")
-        end
-        local b64data
-        if mode == "C" then
-            local len = tonumber(frame:sub(5, 8), 16)
-            b64data = frame:sub(9, len + 8)
-        else
-            local len = tonumber(frame:sub(5, 16), 16)
-            b64data = frame:sub(17, len + 16)
-        end
-        local data = libs.youcubeapi.Base64.decode(b64data)
-        -- TODO: maybe verify checksums?
-        assert(data:sub(1, 4) == "\0\0\0\0" and data:sub(9, 16) == "\0\0\0\0\0\0\0\0", "Invalid file")
-        local width, height = ("HH"):unpack(data, 5)
-        local c, n, pos = string.unpack("c1B", data, 17)
-        local text = {}
-        for y = 1, height do
-            text[y] = ""
-            for x = 1, width do
-                text[y] = text[y] .. c
-                n = n - 1
-                if n == 0 then
-                    c, n, pos = string.unpack("c1B", data, pos)
-                end
-            end
-        end
-        c = c:byte()
-        for y = 1, height do
-            local fg, bg = "", ""
-            for x = 1, width do
-                fg, bg = fg .. ("%x"):format(bit32.band(c, 0x0F)), bg .. ("%x"):format(bit32.rshift(c, 4))
-                n = n - 1
-                if n == 0 then
-                    c, n, pos = string.unpack("BB", data, pos)
-                end
-            end
-            term.setCursorPos(1, y)
-            term.blit(text[y], fg, bg)
-        end
-        pos = pos - 2
-        local r, g, b
-        for i = 0, 15 do
-            r, g, b, pos = string.unpack("BBB", data, pos)
-            term.setPaletteColor(2 ^ i, r / 255, g / 255, b / 255)
-        end
-        if fps == 0 then
-            read()
-            break
-        else
-            while os.epoch "utc" < start + (frame_count + 1) / fps * 1000 do sleep(1 / fps) end
-        end
-    end
-    for i = 0, 15 do
-        term.setPaletteColor(2 ^ i, term.nativePaletteColor(2 ^ i))
-    end
-    term.setBackgroundColor(colors.black)
-    term.setTextColor(colors.white)
-    term.clear()
-    term.setCursorPos(1, 1)
-end
-
 local function play(url)
     print("Requesting media ...")
     youcubeapi:request_media(url, term.getSize())
@@ -450,16 +279,23 @@ local function play(url)
     -- wait, that the user can see the video info
     sleep(2)
 
-    local video_buffer = Buffer.new(
-        VideoFiller.new(data.id, term.getSize()),
+    local video_buffer = libs.youcubeapi.Buffer.new(
+        libs.youcubeapi.VideoFiller.new(
+            youcubeapi,
+            data.id,
+            term.getSize()
+        ),
         --[[
             Most videos run on 30 fps, so we store 2s of video.
         ]]
         60
     )
 
-    local audio_buffer = Buffer.new(
-        AudioFiller.new(data.id),
+    local audio_buffer = libs.youcubeapi.Buffer.new(
+        libs.youcubeapi.AudioFiller.new(
+            youcubeapi,
+            data.id
+        ),
         --[[
             We want to buffer 1024 chunks.
             One chunks is 16 bits.
@@ -468,7 +304,7 @@ local function play(url)
         32
     )
 
-    parallel.waitForAll(
+    parallel.waitForAny(
         function()
             -- Fill Buffers
             while true do
@@ -477,15 +313,17 @@ local function play(url)
 
                 audio_buffer:fill()
                 video_buffer:fill()
-
-                -- TODO: exit when play_vid and play_audio over
             end
         end,
         function()
-            play_vid(video_buffer)
-        end,
-        function()
-            play_audio(audio_buffer, data.title)
+            parallel.waitForAll(
+                function()
+                    libs.youcubeapi.play_vid(video_buffer)
+                end,
+                function()
+                    play_audio(audio_buffer, data.title)
+                end
+            )
         end
     )
 
