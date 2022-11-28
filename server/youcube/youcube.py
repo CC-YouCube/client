@@ -277,7 +277,8 @@ class Server:
                     method
                 )
 
-    async def on_shutdown(self, app: Application):
+    @staticmethod
+    async def on_shutdown(app: Application):
         """
         Clears all web-sockets from the list
         """

@@ -97,9 +97,8 @@ class KillableThread(Thread):
         """
         Uses trace to check if the Thread needs to be killed
         """
-        if self.killed:
-            if event == 'line':
-                raise SystemExit()
+        if self.killed and event == 'line':
+            raise SystemExit()
         return self.localtrace
 
     def kill(self) -> None:
