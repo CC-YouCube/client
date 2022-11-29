@@ -3,13 +3,9 @@ FROM jrottenberg/ffmpeg:5.1-alpine as ffmpeg
 
 FROM alpine:latest as sanjuuni
 
-COPY --from=ffmpeg /usr/local /usr/local
-
-# Use ffmpeg libs
-ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64
-
+# TODO: use the same ffmpeg for sanjuuni
 RUN set -x \
-    && apk add --update git g++ zlib-dev poco-dev make \
+    && apk add --update git g++ zlib-dev poco-dev make ffmpeg-dev \
     && git clone https://github.com/MCJack123/sanjuuni.git \
     && cd sanjuuni \
     && ./configure \
@@ -58,6 +54,6 @@ ENV \
 
 USER 1000
 
-COPY youcube.py .
+COPY youcube/* ./
 
 ENTRYPOINT ["python3", "youcube.py"]

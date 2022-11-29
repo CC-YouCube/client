@@ -1,7 +1,7 @@
 #!make
 
 run-server:
-	python server/youcube.py
+	python server/youcube
 
 run-client:
 	craftos --id 2828 --exec "shell.run('clear') shell.run('youcube')" --mount-ro /=./client
@@ -13,7 +13,7 @@ illuaminate-lint:
 	illuaminate lint
 
 pylint:
-	pylint server/*.py
+	pylint server/youcube/*.py
 
 pyspelling:
 	pyspelling
@@ -22,7 +22,7 @@ illuaminate-doc-gen:
 	illuaminate doc-gen
 
 cleanup:
-	rm doc server/data -Rv
+	rm doc server/data server/__pycache__ -Rv || true
 
 install-illuaminate-linux:
 	wget https://squiddev.cc/illuaminate/linux-x86-64/illuaminate -P /usr/bin

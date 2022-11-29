@@ -1,4 +1,5 @@
 YouCube
+YC
 untrusted
 usr
 utf
@@ -19,3 +20,39 @@ py
 subprocess
 utils
 yt
+bestaudio
+worstaudio
+worstvideo
+vid
+ws
+formatter
+msg
+youtube
+init
+docstring
+chunkindex
+url
+linecache
+commandcracker
+io
+ansi
+Ansi
+subprocesses
+Whitespace
+# formats
+dfpwm
+# linting
+SpellCheckingInspection
+noinspection
+# functions
+getLogger
+localtrace
+isinstance
+# Urls
+https
+wikipedia
+stackoverflow
+github
+dlp
+geeksforgeeks
+www

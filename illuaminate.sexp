@@ -29,6 +29,8 @@
       fs
       printError
       shell
+      parallel
+      sleep
     )
    
    ;; Whether tables entries should be separated by a comma (',') or semicolon (';').

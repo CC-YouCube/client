@@ -1,4 +1,5 @@
 *.dfpwm
-server/data
+*.32vid
 doc
 dictionary.dic
+*.pyc

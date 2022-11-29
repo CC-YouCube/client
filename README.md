@@ -6,7 +6,7 @@
 [![Spellcheck Workflow Status](https://img.shields.io/github/workflow/status/Commandcracker/YouCube/Spellcheck?label=Spell-check&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/spellcheck.yml)
 [![API documentation](https://img.shields.io/github/workflow/status/Commandcracker/YouCube/AsyncAPI%20documents%20processing?label=API%20documentation&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/asyncapi-doc.yml)
 
-YouCube is a tool that streams [dfpwm](https://wiki.vexatos.com/dfpwm) files to [ComputerCraft: Tweaked](https://github.com/cc-tweaked/CC-Tweaked). The YouCube server uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [FFmpeg](https://ffmpeg.org/) to provide media from services like [YouTube](https://www.youtube.com/) as [dfpwm](https://wiki.vexatos.com/dfpwm) files. \
+YouCube streams media from services like YouTube to [ComputerCraft: Tweaked](https://github.com/cc-tweaked/CC-Tweaked). \
 **Project Status: Proof of concept**
 
 ## Installation
@@ -50,6 +50,7 @@ Just install the Dependencies and then run `hoof install youcube`
 
 - `hoof install numberformatter`
 - `hoof install youcubeapi`
+- `hoof install semver`
 
 #### LevelOS / lStore
 
@@ -80,7 +81,8 @@ Moor Information about the servers can be seen on the [doc](https://commandcrack
 
 #### Requirements
 
-- [yt-dlp/FFmpeg](https://github.com/yt-dlp/FFmpeg-Builds) / [ffmpeg 5.1+](https://ffmpeg.org/)
+- [yt-dlp/FFmpeg](https://github.com/yt-dlp/FFmpeg-Builds) / [FFmpeg 5.1+](https://ffmpeg.org/)
+- [sanjuuni](https://github.com/MCJack123/sanjuuni)
 - [Python 3.7+](https://www.python.org/downloads/)
   - [aiohttp](https://pypi.org/project/aiohttp/)
   - [yt-dlp](https://pypi.org/project/yt-dlp/)
@@ -101,10 +103,14 @@ python server/youcube.py
 
 Environment variables you can use to configure the server.
 
-| Variable          | Default | Description                                 |
-|-------------------|---------|---------------------------------------------|
-| `PORT`            | `5000`  | The port where the web server should run on |
-| `TRUSTED_PROXIES` |         | Trusted proxies (separated by comma`,`)     |
+| Variable          | Default    | Description                                 |
+|-------------------|------------|---------------------------------------------|
+| `PORT`            | `5000`     | The port where the web server should run on |
+| `TRUSTED_PROXIES` |            | Trusted proxies (separated by comma`,`)     |
+| `FFMPEG_PATH`     | `ffmpeg`   | Path to the FFmpeg executable               |
+| `SANJUUNI_PATH`   | `sanjuuni` | Path to the Sanjuuni executable             |
+| `NO_COLOR`        | `False`    | Disable colored output                      |
+| `LOGLEVEL`        | `DEBUG`    | Python Log level of the main logger         |
 
 ### Docker Compose
 

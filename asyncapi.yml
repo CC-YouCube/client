@@ -1,7 +1,7 @@
 asyncapi: 2.4.0
 info:
   title: YouCube
-  version: 0.0.poc0
+  version: 0.0.0-poc.0.0.0
   description: |
     Documentation for YouCube's backend API.
 

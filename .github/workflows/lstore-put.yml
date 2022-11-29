@@ -1,9 +1,9 @@
 name: Publish lStore package
+
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - "client/**"
 
@@ -11,14 +11,14 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository code
+      - name: Checkout 🛎️
         uses: actions/checkout@v3
 
-      - name: Rename main file
+      - name: Rename main file 📄
         run: |
           mv client/youcube.lua client/main.lua
 
-      - name: Publish Package
+      - name: Publish Package 🚀
         uses: Commandcracker/lstore-put@v2
         with:
           username: ${{ secrets.LSTORE_USERNAME }}
