@@ -1,29 +1,35 @@
 name: Illuaminate Lint
 
 on:
-  pull_request:
-    paths:
-      - "client/**.lua"
   workflow_dispatch:
   push:
+    paths:
+      - "client/**.lua"
+  pull_request:
     paths:
       - "client/**.lua"
 
 jobs:
   illuaminate-lint:
     runs-on: ubuntu-latest
+
+    # When the pull request is not from a fork,
+    # then the workflow is triggered by "push" and "pull_request"
+    # To not run a workflow 2 times, we check if the pull request is from a fork
+    if: ${{ github.event_name != 'pull_request' || github.repository_owner != 'Commandcracker' }}
+
     steps:
-      - name: Checkout
+      - name: Checkout 🛎️
         uses: actions/checkout@v3
 
-      - name: Install Lua
+      - name: Install Lua 🧰
         uses: leafo/gh-actions-lua@v9
 
-      - name: Install Illuaminate
+      - name: Install Illuaminate 🧰
         run: |
           test -d bin || mkdir bin
           test -f bin/illuaminate || wget -q -Obin/illuaminate https://squiddev.cc/illuaminate/linux-x86-64/illuaminate
           chmod +x bin/illuaminate
 
-      - name: Illuaminate Lint
+      - name: Illuaminate Lint ✅
         run: bin/illuaminate lint

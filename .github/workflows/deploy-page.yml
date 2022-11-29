@@ -1,36 +1,37 @@
-name: AsyncAPI documents processing
+name: Deploy page
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
       - "asyncapi.yml"
 
 jobs:
-  generate:
+  deploy-page:
     runs-on: ubuntu-latest
     steps:
       #"standard step" where repo needs to be checked-out first
-      - name: Checkout repo
+      - name: Checkout 🛎️
         uses: actions/checkout@v3
 
       #Using another action for AsyncAPI for validation
-      - name: Validating AsyncAPI document
+      - name: Validate asyncapi.yml ✅
         uses: WaleedAshraf/asyncapi-github-action@v0.0.8
         with:
           filepath: asyncapi.yml
 
       #In case you do not want to use defaults, you for example want to use different template
-      - name: Generating HTML from my AsyncAPI document
+      - name: Generate HTML from asyncapi.yml 📄
         uses: docker://asyncapi/github-action-for-generator:2.1.7
         with:
-          template: "@asyncapi/html-template@0.26.0" #In case of template from npm, because of @ it must be in quotes
+          template: "@asyncapi/html-template@0.28.1" #In case of template from npm, because of @ it must be in quotes
           filepath: asyncapi.yml
           parameters: baseHref=/YouCube/ sidebarOrganization=byTags #space separated list of key/values
           output: generated-html
 
       #Using another action that takes generated HTML and pushes it to GH Pages
-      - name: Deploy GH page
+      - name: Deploy page 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: generated-html

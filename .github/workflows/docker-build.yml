@@ -1,17 +1,17 @@
-name: AsyncAPI Validate
+name: Build Docker image
 
 on:
   workflow_dispatch:
   push:
-    paths:
-      - "asyncapi.yml"
     branches-ignore: [main]
+    paths:
+      - "server/**"
   pull_request:
     paths:
-      - "asyncapi.yml"
+      - "server/**"
 
 jobs:
-  validate:
+  build-image:
     runs-on: ubuntu-latest
 
     # When the pull request is not from a fork,
@@ -20,12 +20,10 @@ jobs:
     if: ${{ github.event_name != 'pull_request' || github.repository_owner != 'Commandcracker' }}
 
     steps:
-      #"standard step" where repo needs to be checked-out first
       - name: Checkout 🛎️
         uses: actions/checkout@v3
 
-      #Using another action for AsyncAPI for validation
-      - name: Validate ✅
-        uses: WaleedAshraf/asyncapi-github-action@v0.0.8
+      - name: Build image 🔨
+        uses: docker/build-push-action@v3
         with:
-          filepath: asyncapi.yml
+          context: server
