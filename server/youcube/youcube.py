@@ -39,7 +39,7 @@ from yc_utils import (
     get_audio_name
 )
 
-VERSION = "0.0.0-poc.0.0.0"
+VERSION = "0.0.0-poc.0.0.1"
 API_VERSION = "0.0.0-poc.0.0.0"  # https://commandcracker.github.io/YouCube/
 
 # one dfpwm chunk is 16 bits
@@ -51,7 +51,7 @@ because then the CC Computer cant decode the string fast enough!
 Also, it should not be too small because then the client would need to send thousands of WS messages
 and that would also slow everything down! [CHUNK_SIZE * 1]
 """
-CHUNKS_AT_ONCE = CHUNK_SIZE * 32
+CHUNKS_AT_ONCE = CHUNK_SIZE * 512
 
 # pylint settings
 # pylint: disable=pointless-string-statement

@@ -7,7 +7,7 @@ Github Repository: https://github.com/Commandcracker/YouCube
 License: GPL-3.0
 ]]
 
-local _VERSION = "0.0.0-poc.0.0.0"
+local _VERSION = "0.0.0-poc.0.0.1"
 
 -- Libraries - OpenLibrarieLoader v1.0.0 --
 --TODO: Optional libs - for something like JSON lib that is only needed for older CC Versions
@@ -312,14 +312,20 @@ local function play(url)
                 os.pullEvent()
 
                 audio_buffer:fill()
-                video_buffer:fill()
+                --term.clear()
+                --term.setCursorPos(1, 1)
+                --print(#audio_buffer.buffer)
+                --print(audio_buffer.buffer[1])
+                --print(audio_buffer.buffer[2])
+
+                --video_buffer:fill()
             end
         end,
         function()
             parallel.waitForAll(
-                function()
-                    libs.youcubeapi.play_vid(video_buffer)
-                end,
+            --function()
+            --    libs.youcubeapi.play_vid(video_buffer)
+            --end,
                 function()
                     play_audio(audio_buffer, data.title)
                 end
