@@ -175,12 +175,15 @@ end
 -- @tparam string url Url or Search Term
 --@treturn table json response
 function API:request_media(url, width, height)
-    self:send({
+    local request = {
         ["action"] = "request_media",
-        ["url"]    = url,
-        ["width"]  = width * 2,
-        ["height"] = height * 3
-    })
+        ["url"]    = url
+    }
+    if width and height then
+        request.width  = width * 2
+        request.height = height * 3
+    end
+    self:send(request)
     --return self:receive({ ["media"] = true, ["status"] = true })
 end
 
@@ -519,7 +522,7 @@ return {
     --- "Metadata" - [YouCube API](https://commandcracker.github.io/YouCube/) Version
     _API_VERSION = "0.0.0-poc.0.0.0",
     --- "Metadata" - Library Version
-    _VERSION     = "0.0.0-poc.0.0.0",
+    _VERSION     = "0.0.0-poc.0.1.0",
     --- "Metadata" - Description
     _DESCRIPTION = "Library for accessing YouCub's API",
     --- "Metadata" - Homepage / Url

@@ -7,7 +7,7 @@ Github Repository: https://github.com/Commandcracker/YouCube
 License: GPL-3.0
 ]]
 
-local _VERSION = "0.0.0-poc.0.0.1"
+local _VERSION = "0.0.0-poc.0.0.2"
 
 -- Libraries - OpenLibrarieLoader v1.0.0 --
 --TODO: Optional libs - for something like JSON lib that is only needed for older CC Versions
@@ -240,7 +240,7 @@ end
 
 local function play(url)
     print("Requesting media ...")
-    youcubeapi:request_media(url, term.getSize())
+    youcubeapi:request_media(url) --  term.getSize()
 
     local data
     local x, y = term.getCursorPos()
