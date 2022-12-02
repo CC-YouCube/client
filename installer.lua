@@ -9,10 +9,13 @@ License: GPL-3.0
 
 -- OpenInstaller v1.0.0 (based on wget)
 
+local BASE_URL = "https://raw.githubusercontent.com/Commandcracker/YouCube/main/client/"
+
 local files = {
-    ["./youcube.lua"] = "https://raw.githubusercontent.com/Commandcracker/YouCube/main/client/youcube.lua",
-    ["./lib/youcubeapi.lua"] = "https://raw.githubusercontent.com/Commandcracker/YouCube/main/client/lib/youcubeapi.lua",
-    ["./lib/numberformatter.lua"] = "https://raw.githubusercontent.com/Commandcracker/YouCube/main/client/lib/numberformatter.lua"
+    ["./youcube.lua"] = BASE_URL .. "youcube.lua",
+    ["./lib/youcubeapi.lua"] = BASE_URL .. "lib/youcubeapi.lua",
+    ["./lib/numberformatter.lua"] = BASE_URL .. "lib/numberformatter.lua",
+    ["./lib/semver.lua"] = BASE_URL .. "lib/semver.lua"
 }
 
 if not http then
