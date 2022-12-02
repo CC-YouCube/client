@@ -16,15 +16,25 @@ info:
 
 servers:
   public-primary:
-    url: ws://oxygen.knijn.one:5000
+    url: ws://lithium.knijn.one:5000
     protocol: ws
     description: |
       **Primary Public Server**
 
-      Hosted on [voxvm](https://voxvm.com/) in [New York City](https://duckduckgo.com/?t=ffab&q=New+York+City&ia=web&iax=about&iaxm=maps) by [EmmaKnijn](https://knijn.one/)
+      Hosted on [nodespace](https://www.nodespace.net/) in [North Carolina](https://duckduckgo.com/?t=ffab&q=North+Carolina&ia=web&iax=about&iaxm=maps) by [EmmaKnijn](https://knijn.one/)
 
       This server is pretty quick and slick. \
       Thats also a reason, why this server is the primary one.
+  public-old:
+    url: ws://oxygen.knijn.one:5000
+    protocol: ws
+    description: |
+      **Old Public Server**
+
+      Hosted on [voxvm](https://voxvm.com/) in [New York City](https://duckduckgo.com/?t=ffab&q=New+York+City&ia=web&iax=about&iaxm=maps) by [EmmaKnijn](https://knijn.one/)
+
+      This server was once the primary server, \
+      until Emma decided to move hosting providers.
   public-fallback:
     url: wss://youcube.onrender.com
     protocol: wss
