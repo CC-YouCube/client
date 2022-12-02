@@ -29,10 +29,12 @@ function API.new(websocket)
     }, { __index = API })
 end
 
+-- Look at the [Documentation](https://commandcracker.github.io/YouCube/) for moor information
 local servers = {
-    "ws://localhost:5000",
-    "ws://oxygen.knijn.one:5000", -- By EmmaKnijn, Contact EmmaKnijn#0043 on Discord if this doesn't work
-    "wss://youcube.onrender.com" -- By Commandcracker
+    "ws://localhost:5000", -- Your server!
+    "ws://lithium.knijn.one:5000", -- By EmmaKnijn, Contact EmmaKnijn#0043 on Discord if this doesn't work
+    "ws://oxygen.knijn.one:5000", -- By EmmaKnijn, Dont Contact! This is an old sever, use the server above!
+    "wss://youcube.onrender.com" -- By Commandcracker, Contact Commandcracker#8528 on Discord, when the server is down
 }
 
 if settings then
@@ -522,7 +524,7 @@ return {
     --- "Metadata" - [YouCube API](https://commandcracker.github.io/YouCube/) Version
     _API_VERSION = "0.0.0-poc.0.0.0",
     --- "Metadata" - Library Version
-    _VERSION     = "0.0.0-poc.0.1.0",
+    _VERSION     = "0.0.0-poc.0.1.1",
     --- "Metadata" - Description
     _DESCRIPTION = "Library for accessing YouCub's API",
     --- "Metadata" - Homepage / Url
