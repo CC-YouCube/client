@@ -46,7 +46,10 @@ if settings then
 end
 
 --- Connects to a YouCub Server
-function API:detect_bestest_server()
+function API:detect_bestest_server(_server)
+    if _server then
+        table.insert(servers, 1, _server)
+    end
     for i, server in pairs(servers) do
         local websocket, websocket_error = http.websocket(server)
 
@@ -221,6 +224,8 @@ function AudioDevice.new(object)
 
     function self:reset() end
 
+    function self:setVolume(volume) end
+
     return self
 end
 
@@ -253,9 +258,13 @@ function Speaker.new(speaker)
         end
     end
 
+    function self:setVolume(volume)
+        self.volume = volume
+    end
+
     function self:write(chunk)
         local buffer = decoder(chunk)
-        while not self.speaker.playAudio(buffer) do
+        while not self.speaker.playAudio(buffer, self.volume) do
             os.pullEvent("speaker_audio_empty")
         end
     end
@@ -283,6 +292,10 @@ function Tape.new(tape)
         if not self.tape.isReady() then
             error("You need to insert a tape")
         end
+    end
+
+    function self:setVolume(volume)
+        self.tape.setVolume(volume)
     end
 
     function self:play(chunk)
@@ -525,7 +538,7 @@ return {
     --- "Metadata" - [YouCube API](https://commandcracker.github.io/YouCube/) Version
     _API_VERSION = "0.0.0-poc.0.0.0",
     --- "Metadata" - Library Version
-    _VERSION     = "0.0.0-poc.0.1.2",
+    _VERSION     = "0.0.0-poc.0.2.0",
     --- "Metadata" - Description
     _DESCRIPTION = "Library for accessing YouCub's API",
     --- "Metadata" - Homepage / Url

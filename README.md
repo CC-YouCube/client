@@ -41,7 +41,18 @@ wget run https://raw.githubusercontent.com/Commandcracker/YouCube/main/installer
 youcube
 ```
 
-#### UnicornPKG
+#### Libraries
+
+All libraries that are used by the [client](https://github.com/Commandcracker/YouCube/blob/main/client/youcube.lua).
+
+| Library                                                                                               |
+|-------------------------------------------------------------------------------------------------------|
+| [argparse](https://github.com/Commandcracker/cc-argparse)                                             |
+| [numberformatter](https://github.com/Commandcracker/YouCube/blob/main/client/lib/numberformatter.lua) |
+| [semver](https://github.com/kikito/semver.lua)                                                        |
+| [youcubeapi](https://github.com/Commandcracker/YouCube/blob/main/client/lib/youcubeapi.lua)           |
+
+#### UnicornPKG (Experimatail)
 
 YouCube can be installed with [unicornpkg](https://unicornpkg.madefor.cc/). \
 Just install the Dependencies and then run `hoof install youcube`
@@ -51,6 +62,7 @@ Just install the Dependencies and then run `hoof install youcube`
 - `hoof install numberformatter`
 - `hoof install youcubeapi`
 - `hoof install semver`
+- `wget https://raw.githubusercontent.com/Commandcracker/YouCube/main/client/lib/argparse.lua /lib/argparse.lua`
 
 #### LevelOS / lStore
 

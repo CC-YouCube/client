@@ -107,3 +107,6 @@
   
   ;; Whether to create an index.json file, with a dump of all terms. This may be useful for querying externally.
   (json-index true))
+
+(at /client/lib/semver.lua(linters -all))
+(at /client/lib/argparse.lua(linters -all))

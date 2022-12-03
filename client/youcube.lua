@@ -7,7 +7,7 @@ Github Repository: https://github.com/Commandcracker/YouCube
 License: GPL-3.0
 ]]
 
-local _VERSION = "0.0.0-poc.0.0.2"
+local _VERSION = "0.0.0-poc.0.1.0"
 
 -- Libraries - OpenLibrarieLoader v1.0.0 --
 --TODO: Optional libs - for something like JSON lib that is only needed for older CC Versions
@@ -21,7 +21,7 @@ local function is_lib(Table, Item)
     return false
 end
 
-local libs = { "youcubeapi", "numberformatter", "semver" }
+local libs = { "youcubeapi", "numberformatter", "semver", "argparse" }
 local lib_paths = { ".", "./lib", "./apis", "./modules", "/", "/lib", "/apis", "/modules" }
 
 if _G.lOS then
@@ -49,6 +49,73 @@ for key, lib in ipairs(libs) do
     end
 end
 
+-- args --
+
+local parser = libs.argparse {
+    help_max_width = ({ term.getSize() })[1],
+    help_usage_margin = 1,
+    help_description_margin = 23,
+    name = arg[0]
+}
+    :description "Official YouCube client for accessing media from services like YouTube"
+
+parser:argument "URL"
+    :args "*"
+    :description "URL or search term."
+
+parser:flag "-v" "--verbose"
+    :description "Enables verbose output."
+    :target "verbose"
+    :action "store_true"
+
+parser:option "-V" "--volume"
+    :description "Sets the volume of the audio. A value from 0-100"
+    :target "volume"
+
+parser:option "-s" "--server"
+    :description "The server that YC should use."
+    :target "server"
+    :args(1)
+
+parser:flag "--video"
+    :description "Enables video. [Only works smooth on a local server]"
+    :target "no_video"
+    :action "store_false"
+    :default(true)
+
+parser:flag "--no-audio"
+    :description "Disables audio."
+    :target "no_audio"
+    :action "store_true"
+
+local args = parser:parse { ... }
+
+if args.volume then
+    args.volume = tonumber(args.volume)
+    if args.volume == nil then
+        parser:error("Volume must be a number")
+    end
+
+    if args.volume > 100 then
+        parser:error("Volume cant be over 100")
+    end
+
+    if args.volume < 0 then
+        parser:error("Volume cant be below 0")
+    end
+    args.volume = args.volume / 100
+end
+
+if #args.URL > 0 then
+    args.URL = table.concat(args.URL, " ")
+else
+    args.URL = nil
+end
+
+if args.no_video and args.no_audio then
+    parser:error("Nothing will happen, when audio and video is disabled!")
+end
+
 -- CraftOS-PC support --
 
 if periphemu then
@@ -74,12 +141,7 @@ else
     audiodevice = libs.youcubeapi.Speaker.new(speaker)
 end
 
-audiodevice:validate()
-youcubeapi:detect_bestest_server()
-
-
 -- update check --
-
 
 local function get_versions()
     local url = "https://raw.githubusercontent.com/Commandcracker/YouCube/main/versions.json"
@@ -151,6 +213,11 @@ local function update_checker()
         tostring(libs.semver._VERSION),
         versions.client.libraries.semver.version
     )
+    can_update(
+        "argparse",
+        libs.argparse.version,
+        versions.client.libraries.argparse.version
+    )
 
     local handshake = youcubeapi:handshake()
 
@@ -185,21 +252,10 @@ local function update_checker()
     end
 end
 
-update_checker()
-
 local function play_audio(buffer, title)
-    --[[
-    local chunkindex = 0
-
-    local x, y = term.getCursorPos()
-    term.write("Chunkindex: ")
-    term.setTextColor(colors.gray)
-    term.write(chunkindex)
-    term.setTextColor(colors.white)
-    ]]
-
     audiodevice:reset()
     audiodevice:setLabel(title)
+    audiodevice:setVolume(args.volume)
 
     while true do
         local chunk = buffer:next()
@@ -211,36 +267,21 @@ local function play_audio(buffer, title)
 
         if chunk == "" then
             audiodevice:play()
-            print()
-
-            --if data.playlist_videos then
-            --    return data.playlist_videos
-            --end
-
-            --if no_close then
-            --    return
-            --end
-
-            --youcubeapi.websocket.close()
             return
         end
 
         audiodevice:write(chunk)
-
-        --[[
-        term.setCursorPos(x, y)
-        term.write("Chunkindex: ")
-        term.setTextColor(colors.gray)
-        term.write(chunkindex)
-        term.setTextColor(colors.white)
-        ]]
-
     end
 end
 
 local function play(url)
     print("Requesting media ...")
-    youcubeapi:request_media(url) --  term.getSize()
+
+    if not args.no_video then
+        youcubeapi:request_media(url, term.getSize())
+    else
+        youcubeapi:request_media(url)
+    end
 
     local data
     local x, y = term.getCursorPos()
@@ -276,8 +317,10 @@ local function play(url)
         print("Views: " .. libs.numberformatter.compact(data.view_count))
     end
 
-    -- wait, that the user can see the video info
-    sleep(2)
+    if not args.no_video then
+        -- wait, that the user can see the video info
+        sleep(2)
+    end
 
     local video_buffer = libs.youcubeapi.Buffer.new(
         libs.youcubeapi.VideoFiller.new(
@@ -304,6 +347,12 @@ local function play(url)
         32
     )
 
+    if args.verbose then
+        term.clear()
+        term.setCursorPos(1, 1)
+        term.write("[DEBUG MODE]")
+    end
+
     parallel.waitForAny(
         function()
             -- Fill Buffers
@@ -311,23 +360,32 @@ local function play(url)
                 os.queueEvent("buffer_audio_and_video")
                 os.pullEvent()
 
-                audio_buffer:fill()
-                --term.clear()
-                --term.setCursorPos(1, 1)
-                --print(#audio_buffer.buffer)
-                --print(audio_buffer.buffer[1])
-                --print(audio_buffer.buffer[2])
+                if not args.no_audio then
+                    audio_buffer:fill()
+                end
 
-                --video_buffer:fill()
+                if args.verbose then
+                    term.setCursorPos(1, ({ term.getSize() })[2])
+                    term.clearLine()
+                    term.write("Audio_Buffer: " .. #audio_buffer.buffer)
+                end
+
+                if not args.no_video then
+                    video_buffer:fill()
+                end
             end
         end,
         function()
             parallel.waitForAll(
-            --function()
-            --    libs.youcubeapi.play_vid(video_buffer)
-            --end,
                 function()
-                    play_audio(audio_buffer, data.title)
+                    if not args.no_video then
+                        libs.youcubeapi.play_vid(video_buffer)
+                    end
+                end,
+                function()
+                    if not args.no_audio then
+                        play_audio(audio_buffer, data.title)
+                    end
                 end
             )
         end
@@ -338,15 +396,26 @@ local function play(url)
     end
 end
 
-print("Enter Url or Search Term:")
-term.setTextColor(colors.lightGray)
-local _url = read()
-term.setTextColor(colors.white)
+local function main()
+    audiodevice:validate()
+    youcubeapi:detect_bestest_server(args.server)
+    pcall(update_checker)
 
-local playlist_videos = play(_url)
-
-if playlist_videos then
-    for i, id in pairs(playlist_videos) do
-        play(id)
+    if not args.URL then
+        print("Enter Url or Search Term:")
+        term.setTextColor(colors.lightGray)
+        args.URL = read()
+        term.setTextColor(colors.white)
     end
+
+    local playlist_videos = play(args.URL)
+
+    if playlist_videos then
+        for i, id in pairs(playlist_videos) do
+            play(id)
+        end
+    end
+    youcubeapi.websocket.close()
 end
+
+main()

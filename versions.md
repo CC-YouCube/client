@@ -10,7 +10,7 @@ This section helps to change the version of a specific module by listing, where 
 
 In addition, all versions need to be changed in [versions.json](versions.json)
 
-`api.version` -> [asyncapi.yml](asyncapi.yml), [server/youcube.py](server/youcube.py), [client/lib/youcubeapi.lua](client/lib/youcubeapi.lua)
+`api.version` -> [asyncapi.yml](asyncapi.yml), [server/youcube/youcube.py](server/youcube/youcube.py), [client/lib/youcubeapi.lua](client/lib/youcubeapi.lua)
 
 `server.version` -> [server/youcube.py](server/youcube.py)
 
@@ -19,6 +19,8 @@ In addition, all versions need to be changed in [versions.json](versions.json)
 `client.libraries.youcubeapi.version` -> [client/lib/youcubeapi.lua](client/lib/youcubeapi.lua)
 
 `client.libraries.semver.version` -> [client/lib/semver.lua](client/lib/semver.lua)
+
+`client.libraries.argparse.version` -> [client/lib/argparse.lua](client/lib/argparse.lua)
 
 `client.libraries.numberformatter.version` -> [client/lib/numberformatter.lua](client/lib/numberformatter.lua)
 
@@ -35,6 +37,8 @@ When a version is changed a git tag needs to be created. \
 
 `client.libraries.youcubeapi` -> `youcubeapi-<VERSION>`
 
-`client.libraries.semver` -> **-** (semver is not an application mady by/for YouCube)
+`client.libraries.semver` -> **-** [semver](https://github.com/kikito/semver.lua) has it own repository
+
+`client.libraries.argparse` -> **-** [argparse](https://github.com/Commandcracker/cc-argparse) has it own repository
 
 `client.libraries.numberformatter` -> `numberformatter-<VERSION>`

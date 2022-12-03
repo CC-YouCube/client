@@ -15,7 +15,8 @@ local files = {
     ["./youcube.lua"] = BASE_URL .. "youcube.lua",
     ["./lib/youcubeapi.lua"] = BASE_URL .. "lib/youcubeapi.lua",
     ["./lib/numberformatter.lua"] = BASE_URL .. "lib/numberformatter.lua",
-    ["./lib/semver.lua"] = BASE_URL .. "lib/semver.lua"
+    ["./lib/semver.lua"] = BASE_URL .. "lib/semver.lua",
+    ["./lib/argparse.lua"] = BASE_URL .. "lib/argparse.lua"
 }
 
 if not http then
