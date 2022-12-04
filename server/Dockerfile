@@ -5,35 +5,39 @@ FROM alpine:latest as sanjuuni
 
 # TODO: use the same ffmpeg for sanjuuni
 RUN set -x \
-    && apk add --update git g++ zlib-dev poco-dev make ffmpeg-dev \
-    && git clone https://github.com/MCJack123/sanjuuni.git \
-    && cd sanjuuni \
+    && apk add --no-cache --update git g++ zlib-dev poco-dev make ffmpeg-dev \
+    && git clone https://github.com/MCJack123/sanjuuni.git
+
+WORKDIR /sanjuuni
+
+RUN set -x \
     && ./configure \
     && make
 
 FROM alpine:latest AS builder
 
 COPY requirements.txt .
+COPY youcube ./youcube
+COPY compile.py .
 
 ENV \
-    # yt-dlp cache dir
-    XDG_CACHE_HOME="/opt/server/.yt-dlp-cache" \
     # Make sure we use the virtualenv:
     PATH="/opt/venv/bin:$PATH"
 
 RUN set -x \
-    && apk add --update python3 py3-pip gcc libc-dev \
+    && apk add --no-cache --update python3 py3-pip gcc libc-dev \
     # Create virtualenv
     && python3 -m venv /opt/venv \
     && pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir --use-pep517 -r requirements.txt
+    && pip install --no-cache-dir --use-pep517 -r requirements.txt \
+    && python3 compile.py
 
 FROM alpine:latest
 
 WORKDIR /opt/server
 
 RUN set -x \
-    && apk add --update python3 \
+    && apk add --no-cache --update python3 \
     # ffmpeg requirements
     libgcc libstdc++ ca-certificates libcrypto1.1 libssl1.1 libgomp expat \
     # sanjuuni requirements
@@ -50,10 +54,12 @@ ENV \
     # Make sure we use the virtualenv:
     PATH="/opt/venv/bin:$PATH" \
     # Use ffmpeg libs
-    LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64
+    LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64 \
+    # yt-dlp cache dir
+    XDG_CACHE_HOME="/opt/server/.yt-dlp-cache"
 
 USER 1000
 
-COPY youcube/* ./
+COPY --from=builder /youcube/__pycache__ /opt/server
 
-ENTRYPOINT ["python3", "youcube.py"]
+ENTRYPOINT ["python3", "youcube.pyc"]

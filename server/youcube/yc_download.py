@@ -147,8 +147,6 @@ def download(url: str, resp: WebSocketResponse, loop, width: int, height: int) -
 
     with TemporaryDirectory(prefix="youcube-") as temp_dir:
         yt_dl_options = {
-            # "bestaudio/worstvideo+bestaudio/worstaudio/worstvideo+worstaudio/best",
-            # "worstvideo+bestaudio",
             "format": "mp4",
             "outtmpl": join(temp_dir, "%(id)s.%(ext)s"),
             "default_search": "auto",

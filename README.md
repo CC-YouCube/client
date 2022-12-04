@@ -52,7 +52,7 @@ All libraries that are used by the [client](https://github.com/Commandcracker/Yo
 | [semver](https://github.com/kikito/semver.lua)                                                        |
 | [youcubeapi](https://github.com/Commandcracker/YouCube/blob/main/client/lib/youcubeapi.lua)           |
 
-#### UnicornPKG (Experimatail)
+#### UnicornPKG (Experimental)
 
 YouCube can be installed with [unicornpkg](https://unicornpkg.madefor.cc/). \
 Just install the Dependencies and then run `hoof install youcube`

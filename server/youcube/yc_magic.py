@@ -106,7 +106,7 @@ class KillableThread(Thread):
         self.killed = True
 
 
-def run_with_live_output(cmd: list, handler: Callable[[], str]) -> int:
+def run_with_live_output(cmd: list, handler: Callable[[str], None]) -> int:
     """
     Runs a subprocess and allows handling output live
     """

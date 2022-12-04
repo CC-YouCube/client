@@ -39,6 +39,7 @@ ansi
 Ansi
 subprocesses
 Whitespace
+pyc
 # formats
 dfpwm
 # linting

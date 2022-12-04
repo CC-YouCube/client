@@ -12,10 +12,15 @@ from json import loads as load_json
 from json.decoder import JSONDecodeError
 from logging import Logger
 from asyncio import get_event_loop
-from typing import Any, Callable
+from typing import Any, Callable, Union
 from base64 import b64encode
 from shutil import which
-from types import UnionType
+
+try:
+    from types import UnionType
+except ImportError:
+    UnionType = Union[int, str]
+
 
 # pip modules
 from aiohttp.web import (
@@ -128,11 +133,18 @@ def get_client_ip(request: Request, trusted_proxies: list) -> str:
 def assert_resp(
     __obj_name: str,
     __obj: object,
-    __class_or_tuple: type | UnionType | tuple[
-        type |
-        UnionType | tuple[Any, ...], ...
+    __class_or_tuple: Union[
+        type, UnionType,
+        tuple[
+            Union[
+                type,
+                UnionType,
+                tuple[Any, ...]
+            ],
+            ...
+        ]
     ]
-) -> dict | None:
+) -> Union[dict, None]:
     """
     "assert" / isinstance that returns a dict that can be send as a ws response
     """
@@ -150,7 +162,6 @@ class Actions:
     Every action needs to be called with a message and needs to return a dict response
     """
 
-    # pylint: disable=unused-argument
     # pylint: disable=missing-function-docstring
 
     @staticmethod
@@ -170,7 +181,7 @@ class Actions:
         )
 
     @staticmethod
-    async def get_chunk(message: dict, resp: WebSocketResponse):
+    async def get_chunk(message: dict, _unused):
         # get "chunkindex"
         chunkindex = message.get("chunkindex")
         if error := assert_resp("chunkindex", chunkindex, int): return error
@@ -198,7 +209,7 @@ class Actions:
         }
 
     @staticmethod
-    async def get_vid(message: dict, resp: WebSocketResponse):
+    async def get_vid(message: dict, _unused):
         # get "line"
         tracker = message.get("tracker")
         if error := assert_resp("tracker", tracker, int): return error
@@ -235,7 +246,7 @@ class Actions:
         }
 
     @staticmethod
-    async def handshake(message: dict, resp: WebSocketResponse):
+    async def handshake(*_unused):
         return {
             "action": "handshake",
             "server": {
@@ -254,7 +265,6 @@ class Actions:
             }
         }
 
-    # pylint: enable=unused-argument
     # pylint: enable=missing-function-docstring
 
 
@@ -296,7 +306,14 @@ class Server:
         app.on_shutdown.append(self.on_shutdown)
         return app
 
-    def register_action(self, name: str, func: Callable[[], Any]):
+    def register_action(
+        self,
+        name: str,
+        func: Callable[
+            [dict, WebSocketResponse],
+            Union[dict, None]
+        ]
+    ):
         """
         Add and action / "endpoint" to the ws server
         """
