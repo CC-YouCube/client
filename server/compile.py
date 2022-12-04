@@ -18,7 +18,7 @@ def main() -> None:
     ]
 
     for path in Path("youcube").rglob('*.py'):
-        if not isdir(path) and not path.name in blacklist:
+        if not isdir(path) and path.name not in blacklist:
             compile_path = py_compile(path, optimize=2)
             new_name = Path(
                 join(
