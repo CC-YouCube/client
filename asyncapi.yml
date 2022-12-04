@@ -65,6 +65,8 @@ channels:
         oneOf:
           - $ref: "#/components/messages/request_media"
           - $ref: "#/components/messages/get_chunk"
+          - $ref: "#/components/messages/get_vid"
+          - $ref: "#/components/messages/do_handshake"
     publish:
       description: "Messages the Server Can Return"
       message:
@@ -72,6 +74,7 @@ channels:
           - $ref: "#/components/messages/error"
           - $ref: "#/components/messages/chunk"
           - $ref: "#/components/messages/media"
+          - $ref: "#/components/messages/handshake"
 
 components:
   messages:
@@ -91,6 +94,14 @@ components:
             examples:
               - "Never Gonna Give You Up"
               - "dQw4w9WgXcQ"
+          width:
+            type: integer
+            maximum: 164
+            description: Video width
+          height:
+            type: integer
+            maximum: 120
+            description: Video height
         required:
           - action
           - url
@@ -119,6 +130,40 @@ components:
           - chunkindex
           - id
 
+    get_vid:
+      payload:
+        type: object
+        additionalProperties: false
+        properties:
+          action:
+            type: string
+            description: The action that should be performed
+            enum:
+              - "get_vid"
+          tracker:
+            type: integer
+            minimum: 0
+            description: Location of the next frame
+          width:
+            type: integer
+            maximum: 164
+            description: Video width
+          height:
+            type: integer
+            maximum: 120
+            description: Video height
+          id:
+            type: string
+            pattern: ^[a-zA-Z0-9-_]*$
+            description: Media id
+            example: "dQw4w9WgXcQ"
+        required:
+          - action
+          - tracker
+          - id
+          - width
+          - height
+
     error:
       payload:
         type: object
@@ -137,12 +182,37 @@ components:
           - action
           - message
 
+    do_handshake:
+      payload:
+        type: object
+        additionalProperties: false
+        properties:
+          action:
+            type: string
+            description: The action that should be performed
+            enum:
+              - "handshake"
+        required:
+          - action
+
     chunk:
       payload:
         type: object
-        description: 1 chunk is 16 * 1024 bits
+        description: base64 encoded chunks (1 chunk is 16 bits)
         additionalProperties: false
-        example: "ªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªª ..."
+        properties:
+          action:
+            type: string
+            description: The action that should be performed
+            enum:
+              - "chunk"
+          chunk:
+            type: string
+            description: The chunk
+            example: "aHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj1kUXc0dzlXZ1hjUQ=="
+        required:
+          - action
+          - chunk
 
     media:
       payload:
@@ -187,6 +257,50 @@ components:
         required:
           - action
           - id
-          - title
-          - like_count
-          - view_count
+
+    handshake:
+      payload:
+        type: object
+        additionalProperties: true
+        properties:
+          action:
+            type: string
+            description: The action that should be performed
+            enum:
+              - "handshake"
+          server:
+            type: object
+            properties:
+              version:
+                type: string
+                description: The version the server is running
+                examples:
+                  - "0.0.0-poc.0.0.1"
+                  - "0.0.0-poc.0.0.0"
+          api:
+            type: object
+            properties:
+              version:
+                type: string
+                description: The api version the server is using
+                examples:
+                  - "0.0.0-poc.0.0.0"
+          capabilities:
+            type: object
+            properties:
+              video:
+                type: array
+                items:
+                  type: string
+                  description: Video formats that the server supports
+                example:
+                  - "32vid"
+              audio:
+                type: array
+                items:
+                  type: string
+                  description: Audio formats that the server supports
+                example:
+                  - "dfpwm"
+        required:
+          - action
