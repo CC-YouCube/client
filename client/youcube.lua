@@ -7,7 +7,7 @@ Github Repository: https://github.com/Commandcracker/YouCube
 License: GPL-3.0
 ]]
 
-local _VERSION = "0.0.0-poc.0.1.0"
+local _VERSION = "0.0.0-poc.0.1.1"
 
 -- Libraries - OpenLibrarieLoader v1.0.0 --
 --TODO: Optional libs - for something like JSON lib that is only needed for older CC Versions
@@ -124,21 +124,25 @@ end
 
 -- main --
 
-local speaker = peripheral.find("speaker")
-local tape = peripheral.find("tape_drive")
+local speakers = { peripheral.find("speaker") }
+local tapes = { peripheral.find("tape_drive") }
 
-if speaker == nil and tape == nil then
+if #speakers == 0 and #tapes == 0 then
     error("You need a tapedrive or speaker in order to use YouCube!")
 end
 
 local youcubeapi = libs.youcubeapi.API.new()
 
-local audiodevice
+local audiodevices = {}
 
-if speaker == nil then
-    audiodevice = libs.youcubeapi.Tape.new(tape)
+if #speakers == 0 then
+    for _, tape in pairs(tapes) do
+        table.insert(audiodevices, libs.youcubeapi.Tape.new(tape))
+    end
 else
-    audiodevice = libs.youcubeapi.Speaker.new(speaker)
+    for _, speaker in pairs(speakers) do
+        table.insert(audiodevices, libs.youcubeapi.Speaker.new(speaker))
+    end
 end
 
 -- update check --
@@ -253,9 +257,11 @@ local function update_checker()
 end
 
 local function play_audio(buffer, title)
-    audiodevice:reset()
-    audiodevice:setLabel(title)
-    audiodevice:setVolume(args.volume)
+    for _, audiodevice in pairs(audiodevices) do
+        audiodevice:reset()
+        audiodevice:setLabel(title)
+        audiodevice:setVolume(args.volume)
+    end
 
     while true do
         local chunk = buffer:next()
@@ -266,11 +272,25 @@ local function play_audio(buffer, title)
         end
 
         if chunk == "" then
-            audiodevice:play()
+            local play_functions = {}
+            for _, audiodevice in pairs(audiodevices) do
+                table.insert(play_functions, function()
+                    audiodevice:play()
+                end)
+            end
+
+            parallel.waitForAll(table.unpack(play_functions))
             return
         end
 
-        audiodevice:write(chunk)
+        local write_functions = {}
+        for _, audiodevice in pairs(audiodevices) do
+            table.insert(write_functions, function()
+                audiodevice:write(chunk)
+            end)
+        end
+
+        parallel.waitForAll(table.unpack(write_functions))
     end
 end
 
@@ -397,7 +417,9 @@ local function play(url)
 end
 
 local function main()
-    audiodevice:validate()
+    for _, audiodevice in pairs(audiodevices) do
+        audiodevice:validate()
+    end
     youcubeapi:detect_bestest_server(args.server)
     pcall(update_checker)
 
