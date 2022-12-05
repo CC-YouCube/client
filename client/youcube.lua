@@ -7,7 +7,7 @@ Github Repository: https://github.com/Commandcracker/YouCube
 License: GPL-3.0
 ]]
 
-local _VERSION = "0.0.0-poc.0.1.1"
+local _VERSION = "0.0.0-poc.0.1.2"
 
 -- Libraries - OpenLibrarieLoader v1.0.0 --
 --TODO: Optional libs - for something like JSON lib that is only needed for older CC Versions
@@ -51,11 +51,18 @@ end
 
 -- args --
 
+local program_name
+if arg then
+    program_name = arg[0]
+else
+    program_name = fs.getName(shell.getRunningProgram()):gsub("[\\.].*$", "")
+end
+
 local parser = libs.argparse {
     help_max_width = ({ term.getSize() })[1],
     help_usage_margin = 1,
     help_description_margin = 23,
-    name = arg[0]
+    name = program_name
 }
     :description "Official YouCube client for accessing media from services like YouTube"
 

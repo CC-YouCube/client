@@ -6,7 +6,7 @@
         "version": "0.0.0-poc.0.0.1"
     },
     "client": {
-        "version": "0.0.0-poc.0.1.1",
+        "version": "0.0.0-poc.0.1.2",
         "libraries": {
             "youcubeapi": {
                 "version": "0.0.0-poc.0.2.0"
