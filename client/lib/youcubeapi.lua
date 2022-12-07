@@ -45,25 +45,62 @@ if settings then
     end
 end
 
---- Connects to a YouCub Server
-function API:detect_bestest_server(_server)
-    if _server then
-        table.insert(servers, 1, _server)
-    end
-    for i, server in pairs(servers) do
-        local websocket, websocket_error = http.websocket(server)
-
-        if websocket ~= false then
-            term.write("Using the YouCube server: ")
-            term.setTextColor(colors.blue)
-            print(server)
-            term.setTextColor(colors.white)
-            self.websocket = websocket
-            break
-        elseif i == #servers then
-            error(websocket_error)
+local function websocket_with_timeout(_url, _headers, _timeout)
+    if http.websocketAsync then
+        local websocket, websocket_error = http.websocketAsync(_url, _headers)
+        if not websocket then
+            return false, websocket_error
         end
 
+        local timerID = os.startTimer(_timeout)
+
+        while true do
+            local event, param1, param2 = os.pullEvent()
+
+            -- TODO: Close web-socket when the connection succeeds after the timeout
+            if event == "websocket_success" and param1 == _url then
+                return param2
+            elseif event == "websocket_failure" and param1 == _url then
+                return false, param2
+            elseif event == "timer" and param1 == timerID then
+                return false, "Timeout"
+            end
+        end
+    end
+
+    -- use websocket without timeout
+    -- when the CC version dos not support websocketAsync
+    return http.websocket(_url, _headers)
+end
+
+--- Connects to a YouCub Server
+function API:detect_bestest_server(_server, _verbose)
+
+    if _server then table.insert(servers, 1, _server) end
+
+    for i, server in pairs(servers) do
+        local ok, err = http.checkURL(server:gsub("^ws://", "http://"):gsub("^wss://", "https://"))
+        if ok then
+            if _verbose then
+                print("Trying to connect to:", server)
+            end
+            local websocket, websocket_error = websocket_with_timeout(server, nil, 5)
+
+            if websocket ~= false then
+                term.write("Using the YouCube server: ")
+                term.setTextColor(colors.blue)
+                print(server)
+                term.setTextColor(colors.white)
+                self.websocket = websocket
+                break
+            elseif i == #servers then
+                error(websocket_error)
+            elseif _verbose then
+                print(websocket_error)
+            end
+        else
+            error(err)
+        end
     end
 end
 
@@ -538,7 +575,7 @@ return {
     --- "Metadata" - [YouCube API](https://commandcracker.github.io/YouCube/) Version
     _API_VERSION = "0.0.0-poc.0.0.0",
     --- "Metadata" - Library Version
-    _VERSION     = "0.0.0-poc.0.2.0",
+    _VERSION     = "0.0.0-poc.0.3.0",
     --- "Metadata" - Description
     _DESCRIPTION = "Library for accessing YouCub's API",
     --- "Metadata" - Homepage / Url

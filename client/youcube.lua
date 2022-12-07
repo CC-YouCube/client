@@ -7,10 +7,13 @@ Github Repository: https://github.com/Commandcracker/YouCube
 License: GPL-3.0
 ]]
 
-local _VERSION = "0.0.0-poc.0.1.2"
+local _VERSION = "0.0.0-poc.0.1.3"
 
 -- Libraries - OpenLibrarieLoader v1.0.0 --
---TODO: Optional libs - for something like JSON lib that is only needed for older CC Versions
+
+--TODO: Optional libs
+-- For something like a JSON lib that is only needed for older CC Versions or
+-- optional logging.lua support
 
 local function is_lib(Table, Item)
     for key, value in ipairs(Table) do
@@ -427,7 +430,7 @@ local function main()
     for _, audiodevice in pairs(audiodevices) do
         audiodevice:validate()
     end
-    youcubeapi:detect_bestest_server(args.server)
+    youcubeapi:detect_bestest_server(args.server, args.verbose)
     pcall(update_checker)
 
     if not args.URL then
