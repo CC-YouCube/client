@@ -7,5 +7,6 @@
         "ms-azuretools.vscode-docker",
         "carlos-algms.make-task-provider",
         "asyncapi.asyncapi-preview"
-    ]
+    ],
+    "postCreateCommand": "ash .devcontainer/post.sh"
 }

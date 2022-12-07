@@ -25,10 +25,8 @@ RUN set -x \
     # utils
     make \
     && pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir --use-pep517 -r server/requirements.txt \
-    && make install-illuaminate-linux \
-    && make install-pylint \
-    && make install-pyspelling
+    # python-is-python3
+    && ln -sf python3 /usr/bin/python
 
 # add ffmpeg
 COPY --from=ffmpeg /usr/local /usr/local
