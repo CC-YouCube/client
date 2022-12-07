@@ -282,10 +282,7 @@ class Server:
 
         for method in dir(Actions):
             if not method.startswith('__'):
-                self.actions[method] = Actions.__getattribute__(
-                    Actions,
-                    method
-                )
+                self.actions[method] = getattr(Actions, method)
 
     @staticmethod
     async def on_shutdown(app: Application):
