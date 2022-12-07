@@ -80,6 +80,7 @@ function API:detect_bestest_server(_server, _verbose)
 
     for i, server in pairs(servers) do
         local ok, err = http.checkURL(server:gsub("^ws://", "http://"):gsub("^wss://", "https://"))
+
         if ok then
             if _verbose then
                 print("Trying to connect to:", server)
@@ -98,8 +99,10 @@ function API:detect_bestest_server(_server, _verbose)
             elseif _verbose then
                 print(websocket_error)
             end
-        else
+        elseif i == #servers then
             error(err)
+        elseif _verbose then
+            print(err)
         end
     end
 end
