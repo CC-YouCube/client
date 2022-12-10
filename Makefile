@@ -25,7 +25,7 @@ cleanup:
 	rm doc server/data server/__pycache__ -Rv || true
 
 install-illuaminate-linux:
-	wget https://squiddev.cc/illuaminate/linux-x86-64/illuaminate -P /usr/bin
+	wget https://squiddev.cc/illuaminate/bin/latest/illuaminate-linux-x86_64 -O /usr/bin/illuaminate
 	chmod +x /usr/bin/illuaminate
 
 install-pylint:
