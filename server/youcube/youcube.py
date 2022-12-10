@@ -12,7 +12,7 @@ from json import loads as load_json
 from json.decoder import JSONDecodeError
 from logging import Logger
 from asyncio import get_event_loop
-from typing import Any, Callable, Union
+from typing import Callable, Union
 from base64 import b64encode
 from shutil import which
 
@@ -44,8 +44,8 @@ from yc_utils import (
     get_audio_name
 )
 
-VERSION = "0.0.0-poc.0.0.2"
-API_VERSION = "0.0.0-poc.0.0.0"  # https://commandcracker.github.io/YouCube/
+VERSION = "0.0.0-poc.1.0.0"
+API_VERSION = "0.0.0-poc.1.0.0"  # https://commandcracker.github.io/YouCube/
 
 # one dfpwm chunk is 16 bits
 CHUNK_SIZE = 16
@@ -56,7 +56,10 @@ because then the CC Computer cant decode the string fast enough!
 Also, it should not be too small because then the client would need to send thousands of WS messages
 and that would also slow everything down! [CHUNK_SIZE * 1]
 """
-CHUNKS_AT_ONCE = CHUNK_SIZE * 512
+CHUNKS_AT_ONCE = CHUNK_SIZE * 256
+
+
+FRAMES_AT_ONCE = 30
 
 # pylint settings
 # pylint: disable=pointless-string-statement
@@ -64,16 +67,18 @@ CHUNKS_AT_ONCE = CHUNK_SIZE * 512
 # pylint: disable=multiple-statements
 
 
-def get_vid(vid_file: str, tracker: int) -> bytes:
+def get_vid(vid_file: str, tracker: int) -> list[str]:
     """
     Returns given line of 32vid file
     """
     with open(vid_file, "r", encoding="utf-8") as file:
         file.seek(tracker)
-        line = file.readline()
+        lines = []
+        for _unused in range(FRAMES_AT_ONCE):
+            lines.append(file.readline()[:-1])  # remove \n
         file.close()
 
-    return line[:-1]  # remove \n
+    return lines
 
 
 def get_chunk(media_file: str, chunkindex: int) -> bytes:
@@ -139,7 +144,7 @@ def assert_resp(
             Union[
                 type,
                 UnionType,
-                tuple[Any, ...]
+                tuple[object, ...]
             ],
             ...
         ]
@@ -237,7 +242,7 @@ class Actions:
 
             return {
                 "action": "vid",
-                "line": get_vid(file, tracker)
+                "lines": get_vid(file, tracker)
             }
 
         return {

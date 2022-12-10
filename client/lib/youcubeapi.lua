@@ -31,7 +31,7 @@ end
 
 -- Look at the [Documentation](https://commandcracker.github.io/YouCube/) for moor information
 local servers = {
-    "ws://localhost:5000", -- Your server!
+    "ws://127.0.0.1:5000", -- Your server!
     "wss://youcube.knijn.one", -- By EmmaKnijn, Contact EmmaKnijn#0043 on Discord if this doesn't work
     "ws://lithium.knijn.one:5000", -- Insecure version of "wss://youcube.knijn.one", Dont Contact Emma if this doesn't work!
     "ws://oxygen.knijn.one:5000", -- By EmmaKnijn, Dont Contact! This is an old sever, use the server above!
@@ -430,8 +430,10 @@ function VideoFiller.new(youcubeapi, id, width, height)
 
     function self:next()
         local response = self.youcubeapi:get_vid(self.tracker, self.id, self.width, self.height)
-        self.tracker = self.tracker + #response.line + 1
-        return response.line
+        for _, line in pairs(response.lines) do
+            self.tracker = self.tracker + #line + 1
+        end
+        return response.lines
     end
 
     return self
@@ -462,7 +464,14 @@ function Buffer.new(filler, size)
 
     function self:fill()
         if #self.buffer < self.size then
-            table.insert(self.buffer, filler:next())
+            local next = filler:next()
+            if type(next) == "table" then
+                for _, line in pairs(next) do
+                    table.insert(self.buffer, line)
+                end
+            else
+                table.insert(self.buffer, next)
+            end
             return true
         end
         return false
@@ -576,9 +585,9 @@ end
 
 return {
     --- "Metadata" - [YouCube API](https://commandcracker.github.io/YouCube/) Version
-    _API_VERSION = "0.0.0-poc.0.0.0",
+    _API_VERSION = "0.0.0-poc.1.0.0",
     --- "Metadata" - Library Version
-    _VERSION     = "0.0.0-poc.0.3.1",
+    _VERSION     = "0.0.0-poc.1.0.0",
     --- "Metadata" - Description
     _DESCRIPTION = "Library for accessing YouCub's API",
     --- "Metadata" - Homepage / Url

@@ -28,7 +28,7 @@ jobs:
       - name: Install Illuaminate 🧰
         run: |
           test -d bin || mkdir bin
-          test -f bin/illuaminate || wget -q -Obin/illuaminate https://squiddev.cc/illuaminate/linux-x86-64/illuaminate
+          test -f bin/illuaminate || wget -q -Obin/illuaminate https://squiddev.cc/illuaminate/bin/latest/illuaminate-linux-x86_64
           chmod +x bin/illuaminate
 
       - name: Illuaminate Lint ✅
