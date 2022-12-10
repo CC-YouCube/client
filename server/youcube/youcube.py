@@ -44,8 +44,8 @@ from yc_utils import (
     get_audio_name
 )
 
-VERSION = "0.0.0-poc.0.0.2"
-API_VERSION = "0.0.0-poc.0.0.0"  # https://commandcracker.github.io/YouCube/
+VERSION = "0.0.0-poc.1.0.0"
+API_VERSION = "0.0.0-poc.1.0.0"  # https://commandcracker.github.io/YouCube/
 
 # one dfpwm chunk is 16 bits
 CHUNK_SIZE = 16
