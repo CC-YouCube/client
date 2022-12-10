@@ -1,7 +1,7 @@
 # TODO: change from ffmpeg 5.1+ to yt-dlp/FFmpeg
 FROM jrottenberg/ffmpeg:5.1-alpine as ffmpeg
 
-FROM alpine:latest as sanjuuni
+FROM alpine:3.16 as sanjuuni
 
 # TODO: use the same ffmpeg for sanjuuni
 RUN set -x \
@@ -14,7 +14,7 @@ RUN set -x \
     && ./configure \
     && make
 
-FROM mcr.microsoft.com/vscode/devcontainers/base:alpine
+FROM mcr.microsoft.com/vscode/devcontainers/base:alpine-3.16
 
 RUN set -x \
     && apk add --no-cache --update python3 py3-pip gcc libc-dev \
