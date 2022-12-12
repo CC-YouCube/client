@@ -7,7 +7,7 @@ Github Repository: https://github.com/Commandcracker/YouCube
 License: GPL-3.0
 ]]
 
-local _VERSION = "0.0.0-poc.0.1.3"
+local _VERSION = "0.0.0-poc.0.2.0"
 
 -- Libraries - OpenLibrarieLoader v1.0.0 --
 
@@ -87,11 +87,10 @@ parser:option "-s" "--server"
     :target "server"
     :args(1)
 
-parser:flag "--video"
-    :description "Enables video. [Only works smooth on a local server]"
+parser:flag "--no-video"
+    :description "Disables video."
     :target "no_video"
-    :action "store_false"
-    :default(true)
+    :action "store_true"
 
 parser:flag "--no-audio"
     :description "Disables audio."
@@ -130,6 +129,8 @@ end
 
 if periphemu then
     periphemu.create("top", "speaker")
+    -- Fuck the max websocket message police
+    config.set("http_max_websocket_message", 2 ^ 30)
 end
 
 -- main --

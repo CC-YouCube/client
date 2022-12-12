@@ -23,7 +23,6 @@
       colors
       http
       peripheral
-      periphemu
       read
       settings
       fs
@@ -31,6 +30,9 @@
       shell
       parallel
       sleep
+      ;; CraftOS-PC
+      periphemu
+      config
     )
    
    ;; Whether tables entries should be separated by a comma (',') or semicolon (';').
