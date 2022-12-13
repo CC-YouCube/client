@@ -23,7 +23,7 @@ YouCube streams media from services like YouTube to [ComputerCraft: Tweaked](htt
 
 ![preview](.README/preview-client.png)
 
-https://user-images.githubusercontent.com/49335821/207105983-f3887269-51d2-4ea2-b8f5-4c4af87ccad4.mp4
+<https://user-images.githubusercontent.com/49335821/207105983-f3887269-51d2-4ea2-b8f5-4c4af87ccad4.mp4>
 
 The client can be installed by running the following command:
 
@@ -74,6 +74,21 @@ Settings that can be set with the CC: Tweaked [settings module](https://tweaked.
 | name             | default | Description                      |
 |------------------|---------|----------------------------------|
 | `youcube.server` |         | First server that should be used |
+
+#### Events
+
+List of events that are [queued](https://tweaked.cc/module/os.html#v:queueEvent) by youcube
+
+| Name                     | Arguments | Description                                     |
+|--------------------------|-----------|-------------------------------------------------|
+| `youcube:vid_eof`        | `data`    | Called, when Video playback has ended           |
+| `youcube:audio_eof`      | `data`    | Called, when Audio playback has ended           |
+| `youcube:fill_buffers`   |           | Internal event (called when buffers are filled) |
+| `youcube:status`         | `data`    | Status of the serversided media download        |
+| `youcube:playback_ended` |           | Called, when all playback has ended             |
+| `youcube:vid_playing`    | `data`    | Called, when Video playback has started         |
+| `youcube:audio_playing`  | `data`    | Called, when Audio playback has started         |
+| `youcube:playing`        |           | Called, when playback has started               |
 
 ### Server
 

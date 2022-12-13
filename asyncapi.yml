@@ -1,7 +1,7 @@
 asyncapi: 2.4.0
 info:
   title: YouCube
-  version: 0.0.0-poc.0.0.0
+  version: 0.0.0-poc.1.0.0
   description: |
     Documentation for YouCube's backend API.
 
@@ -64,6 +64,7 @@ channels:
           - $ref: "#/components/messages/chunk"
           - $ref: "#/components/messages/media"
           - $ref: "#/components/messages/handshake"
+          - $ref: "#/components/messages/vid"
 
 components:
   messages:
@@ -202,6 +203,33 @@ components:
         required:
           - action
           - chunk
+
+    vid:
+      payload:
+        type: object
+        description: base64 encoded chunks (1 chunk is 16 bits)
+        additionalProperties: false
+        properties:
+          action:
+            type: string
+            description: The action that should be performed
+            enum:
+              - "vid"
+          lines:
+            type: array
+            items:
+              type: string
+              description: Video formats that the server supports
+            example:
+              - "32Vid 1.1"
+              - "24"
+              - "!CPC006CAAAAADMAEwAAAAAAAAAAACD/IP8g/yDMAP8A/wD/AMwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=7550035d"
+              - "!CPC006CAAAAADMAEwAAAAAAAAAAACD/IP8g/yDMAP8A/wD/AMwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=7550035d"
+              - "!CPC0070AAAAADMAEwAAAAAAAAAAACD/IP8g/yDMAP8A8hABAP8A2AAAAAABAAAAAAABAAAAAAEBAQAAAAEBAQAAAAEBAQAAAAEBAQAAAAAAAAAAAAAAAA==daa086f0"
+              - "..."
+        required:
+          - action
+          - lines
 
     media:
       payload:

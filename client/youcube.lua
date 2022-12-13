@@ -7,7 +7,7 @@ Github Repository: https://github.com/Commandcracker/YouCube
 License: GPL-3.0
 ]]
 
-local _VERSION = "0.0.0-poc.0.2.0"
+local _VERSION = "0.0.0-poc.0.2.1"
 
 -- Libraries - OpenLibrarieLoader v1.0.0 --
 
@@ -87,12 +87,12 @@ parser:option "-s" "--server"
     :target "server"
     :args(1)
 
-parser:flag "--no-video"
+parser:flag "--no-video" "--nv"
     :description "Disables video."
     :target "no_video"
     :action "store_true"
 
-parser:flag "--no-audio"
+parser:flag "--no-audio" "--na"
     :description "Disables audio."
     :target "no_audio"
     :action "store_true"
@@ -324,6 +324,7 @@ local function play(url)
             term.clearLine()
             term.write("Status: ")
             term.setTextColor(colors.green)
+            os.queueEvent("youcube:status", data)
             term.write(data.message)
             term.setTextColor(colors.white)
         else
@@ -388,7 +389,7 @@ local function play(url)
         function()
             -- Fill Buffers
             while true do
-                os.queueEvent("buffer_audio_and_video")
+                os.queueEvent("youcube:fill_buffers")
                 os.pullEvent()
 
                 if not args.no_audio then
@@ -407,15 +408,20 @@ local function play(url)
             end
         end,
         function()
+            os.queueEvent("youcube:playing")
             parallel.waitForAll(
                 function()
                     if not args.no_video then
+                        os.queueEvent("youcube:vid_playing", data)
                         libs.youcubeapi.play_vid(video_buffer)
+                        os.queueEvent("youcube:vid_eof", data)
                     end
                 end,
                 function()
                     if not args.no_audio then
+                        os.queueEvent("youcube:audio_playing", data)
                         play_audio(audio_buffer, data.title)
+                        os.queueEvent("youcube:audio_eof", data)
                     end
                 end
             )
@@ -449,6 +455,7 @@ local function main()
         end
     end
     youcubeapi.websocket.close()
+    os.queueEvent("youcube:playback_ended")
 end
 
 main()
