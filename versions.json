@@ -9,7 +9,7 @@
         "version": "0.0.0-poc.0.2.0",
         "libraries": {
             "youcubeapi": {
-                "version": "0.0.0-poc.1.0.0"
+                "version": "0.0.0-poc.1.0.1"
             },
             "numberformatter": {
                 "version": "1.1.0"

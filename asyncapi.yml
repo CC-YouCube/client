@@ -34,17 +34,6 @@ servers:
       Hosted on [nodespace](https://www.nodespace.net/) in [North Carolina](https://duckduckgo.com/?t=ffab&q=North+Carolina&ia=web&iax=about&iaxm=maps) by [EmmaKnijn](https://knijn.one/)
 
       **This "Server" points to the primary server without SSL!**
-  public-old:
-    url: ws://oxygen.knijn.one:5000
-    protocol: ws
-    description: |
-      **Old Public Server**
-
-      Hosted on [voxvm](https://voxvm.com/) in [New York City](https://duckduckgo.com/?t=ffab&q=New+York+City&ia=web&iax=about&iaxm=maps) by [EmmaKnijn](https://knijn.one/)
-
-      This server was once the primary server, \
-      until Emma decided to move hosting providers. \
-      **This server will be terminated on 17 December 2022!**
   public-fallback:
     url: wss://youcube.onrender.com
     protocol: wss
