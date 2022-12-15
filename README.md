@@ -3,8 +3,8 @@
 [![Project license](https://img.shields.io/github/license/Commandcracker/YouCube?style=for-the-badge)](https://github.com/Commandcracker/YouCube/blob/main/LICENSE.txt)
 [![Mentioned in Awesome ComputerCraft](https://img.shields.io/badge/Mentioned%20in%20Awesome-ComputerCraft-violet?style=for-the-badge&logo=Awesome%20Lists&logoColor=white)](https://github.com/tomodachi94/awesome-computercraft)
 
-[![Spellcheck Workflow Status](https://img.shields.io/github/workflow/status/Commandcracker/YouCube/Spellcheck?label=Spell-check&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/spellcheck.yml)
-[![API documentation](https://img.shields.io/github/workflow/status/Commandcracker/YouCube/AsyncAPI%20documents%20processing?label=API%20documentation&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/asyncapi-doc.yml)
+[![Spellcheck Workflow Status](https://img.shields.io/github/actions/workflow/status/Commandcracker/YouCube/spellcheck.yml?branch=main&label=Spell-check&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/spellcheck.yml)
+[![API documentation](https://img.shields.io/github/actions/workflow/status/Commandcracker/YouCube/asyncapi-doc.yml?branch=main&label=API%20documentation&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/asyncapi-doc.yml)
 
 YouCube streams media from services like YouTube to [ComputerCraft: Tweaked](https://github.com/cc-tweaked/CC-Tweaked). \
 **Project Status: Proof of concept**
@@ -19,7 +19,7 @@ YouCube streams media from services like YouTube to [ComputerCraft: Tweaked](htt
 ![+](.README/plus.svg)
 [![Computronics Version: 0.1.0+](https://img.shields.io/badge/Computronics-0.1.0+-green?style=for-the-badge)](https://wiki.vexatos.com/wiki:computronics)
 
-[![Lua Lint Workflow Status](https://img.shields.io/github/workflow/status/Commandcracker/YouCube/Illuaminate%20Lint?label=Lua%20Lint&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/illuaminate-lint.yml)
+[![Lua Lint Workflow Status](https://img.shields.io/github/actions/workflow/status/Commandcracker/YouCube/illuaminate-lint.yml?branch=main&label=Lua%20Lint&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/illuaminate-lint.yml)
 
 ![preview](.README/preview-client.png)
 
@@ -61,7 +61,7 @@ Just run `hoof install youcube` to install it.
 
 #### LevelOS / lStore
 
-[![lStore Package](https://img.shields.io/github/workflow/status/Commandcracker/YouCube/Publish%20lStore%20package?label=lStore%20Package&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/lstore-put.yml)
+[![lStore Package](https://img.shields.io/github/actions/workflow/status/Commandcracker/YouCube/lstore-put.yml?branch=main&label=lStore%20Package&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/lstore-put.yml)
 
 On [LevelOS](https://discord.com/invite/vBsjGqy99U) YouCube can be installed by running `lStore get YouCube <path>` or `lStore get bpBYV1aG <path>` or by Using the StoreUI.
 
@@ -93,7 +93,7 @@ List of events that are [queued](https://tweaked.cc/module/os.html#v:queueEvent)
 ### Server
 
 [![Python Version: 3.7+](https://img.shields.io/badge/Python-3.7+-green?style=for-the-badge&logo=Python&logoColor=white)](https://www.python.org/downloads/)
-[![Python Lint Workflow Status](https://img.shields.io/github/workflow/status/Commandcracker/YouCube/Pylint?label=Python%20Lint&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/pylint.yml)
+[![Python Lint Workflow Status](https://img.shields.io/github/actions/workflow/status/Commandcracker/YouCube/pylint.yml?branch=main&label=Python%20Lint&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/pylint.yml)
 
 ![preview](.README/preview-server.png)
 
