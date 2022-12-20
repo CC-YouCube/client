@@ -114,15 +114,17 @@ function API:receive(filter)
         self.websocket.receive
     )
     if not status then
-        print("Lost connection to server -> Reconnection ...")
-        self:detect_bestest_server()
-        return self:receive(filter)
+        error("Lost connection to server\n" .. retval)
     end
 
-    local data = textutils.unserialiseJSON(retval)
+    if retval == nil then
+        error("Received empty message or max message size exceeded")
+    end
+
+    local data, err = textutils.unserialiseJSON(retval)
 
     if data == nil then
-        error("Failed to parse message")
+        error("Failed to parse message\n" .. err)
     end
 
     if filter then
@@ -147,9 +149,7 @@ function API:send(data)
         textutils.serialiseJSON(data)
     )
     if not status then
-        print("Lost connection to server -> Reconnection ...")
-        self:detect_bestest_server()
-        self:send(data)
+        error("Lost connection to server\n" .. retval)
     end
 end
 
@@ -586,7 +586,7 @@ return {
     --- "Metadata" - [YouCube API](https://commandcracker.github.io/YouCube/) Version
     _API_VERSION = "0.0.0-poc.1.0.0",
     --- "Metadata" - Library Version
-    _VERSION     = "0.0.0-poc.1.0.1",
+    _VERSION     = "0.0.0-poc.1.0.2",
     --- "Metadata" - Description
     _DESCRIPTION = "Library for accessing YouCub's API",
     --- "Metadata" - Homepage / Url

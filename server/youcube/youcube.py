@@ -51,7 +51,7 @@ from yc_utils import (
     get_audio_name
 )
 
-VERSION = "0.0.0-poc.1.0.0"
+VERSION = "0.0.0-poc.1.0.1"
 API_VERSION = "0.0.0-poc.1.0.0"  # https://commandcracker.github.io/YouCube/
 
 # one dfpwm chunk is 16 bits
@@ -66,7 +66,7 @@ and that would also slow everything down! [CHUNK_SIZE * 1]
 CHUNKS_AT_ONCE = CHUNK_SIZE * 256
 
 
-FRAMES_AT_ONCE = 30
+FRAMES_AT_ONCE = 5
 
 # pylint settings
 # pylint: disable=pointless-string-statement

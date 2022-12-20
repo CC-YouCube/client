@@ -3,13 +3,13 @@
         "version": "0.0.0-poc.1.0.0"
     },
     "server": {
-        "version": "0.0.0-poc.1.0.0"
+        "version": "0.0.0-poc.1.0.1"
     },
     "client": {
         "version": "0.0.0-poc.0.2.1",
         "libraries": {
             "youcubeapi": {
-                "version": "0.0.0-poc.1.0.1"
+                "version": "0.0.0-poc.1.0.2"
             },
             "numberformatter": {
                 "version": "1.1.0"
