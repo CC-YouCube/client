@@ -7,7 +7,7 @@ Github Repository: https://github.com/Commandcracker/YouCube
 License: GPL-3.0
 ]]
 
-local _VERSION = "0.0.0-poc.0.2.1"
+local _VERSION = "0.0.0-poc.0.3.0"
 
 -- Libraries - OpenLibrarieLoader v1.0.0 --
 
@@ -87,14 +87,24 @@ parser:option "-s" "--server"
     :target "server"
     :args(1)
 
-parser:flag "--no-video" "--nv"
+parser:flag "--nv" "--no-video"
     :description "Disables video."
     :target "no_video"
     :action "store_true"
 
-parser:flag "--no-audio" "--na"
+parser:flag "--na" "--no-audio"
     :description "Disables audio."
     :target "no_audio"
+    :action "store_true"
+
+parser:flag "-l" "--loop"
+    :description "Loops the media."
+    :target "loop"
+    :action "store_true"
+
+parser:flag "--lp" "--loop-playlist"
+    :description "Loops the playlist."
+    :target "loop_playlist"
     :action "store_true"
 
 local args = parser:parse { ... }
@@ -433,6 +443,12 @@ local function play(url)
     end
 end
 
+local function play_playlist(playlist)
+    for _, id in pairs(playlist) do
+        play(id)
+    end
+end
+
 local function main()
     for _, audiodevice in pairs(audiodevices) do
         audiodevice:validate()
@@ -449,11 +465,23 @@ local function main()
 
     local playlist_videos = play(args.URL)
 
-    if playlist_videos then
-        for i, id in pairs(playlist_videos) do
-            play(id)
+    if args.loop == true then
+        while true do
+            play(args.URL)
         end
     end
+
+    if playlist_videos then
+        if args.loop_playlist == true then
+            while true do
+                if playlist_videos then
+                    play_playlist(playlist_videos)
+                end
+            end
+        end
+        play_playlist(playlist_videos)
+    end
+
     youcubeapi.websocket.close()
     os.queueEvent("youcube:playback_ended")
 end
