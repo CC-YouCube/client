@@ -12,7 +12,14 @@ from json import loads as load_json
 from json.decoder import JSONDecodeError
 from logging import Logger
 from asyncio import get_event_loop
-from typing import Callable, Union
+from typing import (
+    Callable,
+    Union,
+    Tuple,
+    Type,
+    List,
+    Any
+)
 from base64 import b64encode
 from shutil import which
 
@@ -67,7 +74,7 @@ FRAMES_AT_ONCE = 30
 # pylint: disable=multiple-statements
 
 
-def get_vid(vid_file: str, tracker: int) -> list[str]:
+def get_vid(vid_file: str, tracker: int) -> List[str]:
     """
     Returns given line of 32vid file
     """
@@ -137,14 +144,14 @@ def get_client_ip(request: Request, trusted_proxies: list) -> str:
 
 def assert_resp(
     __obj_name: str,
-    __obj: object,
+    __obj: Any,
     __class_or_tuple: Union[
-        type, UnionType,
-        tuple[
+        Type, UnionType,
+        Tuple[
             Union[
-                type,
+                Type,
                 UnionType,
-                tuple[object, ...]
+                Tuple[Any, ...]
             ],
             ...
         ]

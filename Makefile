@@ -7,7 +7,7 @@ run-client:
 	craftos --id 2828 --exec "shell.run('clear') shell.run('youcube')" --mount-ro /=./client
 
 docker-build:
-	docker build -t youcube:1.0.0 -t youcube:latest server/.
+	docker build -t youcube:latest server/.
 
 illuaminate-lint:
 	illuaminate lint
