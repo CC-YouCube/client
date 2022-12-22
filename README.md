@@ -4,7 +4,7 @@
 [![Mentioned in Awesome ComputerCraft](https://img.shields.io/badge/Mentioned%20in%20Awesome-ComputerCraft-violet?style=for-the-badge&logo=Awesome%20Lists&logoColor=white)](https://github.com/tomodachi94/awesome-computercraft)
 
 [![Spellcheck Workflow Status](https://img.shields.io/github/actions/workflow/status/Commandcracker/YouCube/spellcheck.yml?branch=main&label=Spell-check&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/spellcheck.yml)
-[![API documentation](https://img.shields.io/github/actions/workflow/status/Commandcracker/YouCube/deploy-page.yml?branch=main&label=API%20documentation&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/asyncapi-doc.yml)
+[![API documentation](https://img.shields.io/github/actions/workflow/status/Commandcracker/YouCube/deploy-page.yml?branch=main&label=API%20documentation&logo=github&style=for-the-badge)](https://github.com/Commandcracker/YouCube/actions/workflows/deploy-page.yml)
 
 YouCube streams media from services like YouTube to [ComputerCraft: Tweaked](https://github.com/cc-tweaked/CC-Tweaked). \
 **Project Status: Proof of concept**
