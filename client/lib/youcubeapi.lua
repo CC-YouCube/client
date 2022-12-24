@@ -479,6 +479,16 @@ function Buffer.new(filler, size)
     return self
 end
 
+local function reset_term()
+    for i = 0, 15 do
+        term.setPaletteColor(2 ^ i, term.nativePaletteColor(2 ^ i))
+    end
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
+    term.clear()
+    term.setCursorPos(1, 1)
+end
+
 --[[- Create's a new Buffer instance.
 
     Based on [sanjuuni/raw-player.lua](https://github.com/MCJack123/sanjuuni/blob/c64f8725a9f24dec656819923457717dfb964515/raw-player.lua)
@@ -573,20 +583,14 @@ local function play_vid(buffer)
             while os.epoch "utc" < start + (frame_count + 1) / fps * 1000 do sleep(1 / fps) end
         end
     end
-    for i = 0, 15 do
-        term.setPaletteColor(2 ^ i, term.nativePaletteColor(2 ^ i))
-    end
-    term.setBackgroundColor(colors.black)
-    term.setTextColor(colors.white)
-    term.clear()
-    term.setCursorPos(1, 1)
+    reset_term()
 end
 
 return {
     --- "Metadata" - [YouCube API](https://commandcracker.github.io/YouCube/) Version
     _API_VERSION = "0.0.0-poc.1.0.0",
     --- "Metadata" - Library Version
-    _VERSION     = "0.0.0-poc.1.0.2",
+    _VERSION     = "0.0.0-poc.1.1.0",
     --- "Metadata" - Description
     _DESCRIPTION = "Library for accessing YouCub's API",
     --- "Metadata" - Homepage / Url
@@ -602,5 +606,6 @@ return {
     AudioFiller  = AudioFiller,
     VideoFiller  = VideoFiller,
     Buffer       = Buffer,
-    play_vid     = play_vid
+    play_vid     = play_vid,
+    reset_term   = reset_term
 }

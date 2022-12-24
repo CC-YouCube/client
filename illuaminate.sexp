@@ -30,6 +30,7 @@
       shell
       parallel
       sleep
+      keys
       ;; CraftOS-PC
       periphemu
       config

@@ -7,7 +7,7 @@ Github Repository: https://github.com/Commandcracker/YouCube
 License: GPL-3.0
 ]]
 
-local _VERSION = "0.0.0-poc.0.3.1"
+local _VERSION = "0.0.0-poc.0.4.0"
 
 -- Libraries - OpenLibrarieLoader v1.0.0 --
 
@@ -320,7 +320,15 @@ local function play_audio(buffer, title)
     end
 end
 
+-- #region playback controll vars
+local back_buffer = {}
+local max_back = settings.get("youcube.max_back") or 32
+local queue = {}
+local restart = false
+-- #endregion
+
 local function play(url)
+    restart = false
     print("Requesting media ...")
 
     if not args.no_video then
@@ -440,6 +448,28 @@ local function play(url)
                     end
                 end
             )
+        end,
+        function()
+            while true do
+                local _, key = os.pullEvent("key")
+                if key == (settings.get("youcube.keys.skip") or keys.d) then
+                    table.insert(back_buffer, url) --finished playing, push the value to the back buffer
+                    if #back_buffer > max_back then
+                        table.remove(back_buffer, 1) --remove it from the front of the buffer
+                    end
+                    if not args.no_video then
+                        libs.youcubeapi.reset_term()
+                    end
+                    break
+                elseif key == (settings.get("youcube.keys.restart") or keys.r) then
+                    table.insert(queue, url) --add the current song to upcoming
+                    if not args.no_video then
+                        libs.youcubeapi.reset_term()
+                    end
+                    restart = true
+                    break
+                end
+            end
         end
     )
 
@@ -449,16 +479,38 @@ local function play(url)
 end
 
 local function play_playlist(playlist)
+    queue = playlist
     if args.shuffle then
         local shuffled = {}
-        for i, v in pairs(playlist) do
+        for i, v in pairs(queue) do
             local pos = math.random(1, #shuffled + 1)
             table.insert(shuffled, pos, v)
         end
-        playlist = shuffled
+        queue = shuffled
     end
-    for _, id in pairs(playlist) do
-        play(id)
+    while #queue ~= 0 do
+        local pl = table.remove(queue)
+        parallel.waitForAny(
+            function()
+                while true do
+                    local _, key = os.pullEvent("key")
+                    if key == (settings.get("youcube.keys.back") or keys.a) then
+                        table.insert(queue, pl) --add the current song to upcoming
+                        local prev = table.remove(back_buffer)
+                        if prev then --nil/false check
+                            table.insert(queue, prev) --add previous song to upcoming
+                        end
+                        if not args.no_video then
+                            libs.youcubeapi.reset_term()
+                        end
+                        break
+                    end
+                end
+            end,
+            function()
+                play(pl) --play the url
+            end
+        )
     end
 end
 
@@ -483,7 +535,6 @@ local function main()
             play(args.URL)
         end
     end
-
     if playlist_videos then
         if args.loop_playlist == true then
             while true do
@@ -495,7 +546,16 @@ local function main()
         play_playlist(playlist_videos)
     end
 
+    while restart do
+        play(args.URL)
+    end
+
     youcubeapi.websocket.close()
+
+    if not args.no_video then
+        libs.youcubeapi.reset_term()
+    end
+
     os.queueEvent("youcube:playback_ended")
 end
 

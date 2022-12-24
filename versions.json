@@ -6,10 +6,10 @@
         "version": "0.0.0-poc.1.0.2"
     },
     "client": {
-        "version": "0.0.0-poc.0.3.1",
+        "version": "0.0.0-poc.0.4.0",
         "libraries": {
             "youcubeapi": {
-                "version": "0.0.0-poc.1.0.2"
+                "version": "0.0.0-poc.1.1.0"
             },
             "numberformatter": {
                 "version": "1.1.0"
