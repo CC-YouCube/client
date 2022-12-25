@@ -7,7 +7,7 @@ Github Repository: https://github.com/Commandcracker/YouCube
 License: GPL-3.0
 ]]
 
-local _VERSION = "0.0.0-poc.0.4.0"
+local _VERSION = "0.0.0-poc.0.5.0"
 
 -- Libraries - OpenLibrarieLoader v1.0.0 --
 
@@ -161,14 +161,28 @@ local youcubeapi = libs.youcubeapi.API.new()
 
 local audiodevices = {}
 
-if #speakers == 0 then
-    for _, tape in pairs(tapes) do
-        table.insert(audiodevices, libs.youcubeapi.Tape.new(tape))
+for _, speaker in pairs(speakers) do
+    table.insert(audiodevices, libs.youcubeapi.Speaker.new(speaker))
+end
+
+for _, tape in pairs(tapes) do
+    table.insert(audiodevices, libs.youcubeapi.Tape.new(tape))
+end
+
+local last_error
+local valid_audiodevices = {}
+
+for i, audiodevice in pairs(audiodevices) do
+    local _error = audiodevice:validate()
+    if _error ~= nil then
+        last_error = _error
+    else
+        table.insert(valid_audiodevices, audiodevice)
     end
-else
-    for _, speaker in pairs(speakers) do
-        table.insert(audiodevices, libs.youcubeapi.Speaker.new(speaker))
-    end
+end
+
+if #valid_audiodevices == 0 then
+    error(last_error)
 end
 
 -- update check --
@@ -283,7 +297,7 @@ local function update_checker()
 end
 
 local function play_audio(buffer, title)
-    for _, audiodevice in pairs(audiodevices) do
+    for _, audiodevice in pairs(valid_audiodevices) do
         audiodevice:reset()
         audiodevice:setLabel(title)
         audiodevice:setVolume(args.volume)
@@ -299,7 +313,7 @@ local function play_audio(buffer, title)
 
         if chunk == "" then
             local play_functions = {}
-            for _, audiodevice in pairs(audiodevices) do
+            for _, audiodevice in pairs(valid_audiodevices) do
                 table.insert(play_functions, function()
                     audiodevice:play()
                 end)
@@ -310,7 +324,7 @@ local function play_audio(buffer, title)
         end
 
         local write_functions = {}
-        for _, audiodevice in pairs(audiodevices) do
+        for _, audiodevice in pairs(valid_audiodevices) do
             table.insert(write_functions, function()
                 audiodevice:write(chunk)
             end)
@@ -515,9 +529,6 @@ local function play_playlist(playlist)
 end
 
 local function main()
-    for _, audiodevice in pairs(audiodevices) do
-        audiodevice:validate()
-    end
     youcubeapi:detect_bestest_server(args.server, args.verbose)
     pcall(update_checker)
 

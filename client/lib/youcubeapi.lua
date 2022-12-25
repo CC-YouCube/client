@@ -293,7 +293,7 @@ function Speaker.new(speaker)
 
     function self:validate()
         if not decoder then
-            error("This ComputerCraft version dos not support DFPWM")
+            return "This ComputerCraft version dos not support DFPWM"
         end
     end
 
@@ -329,12 +329,14 @@ function Tape.new(tape)
 
     function self:validate()
         if not self.tape.isReady() then
-            error("You need to insert a tape")
+            return "You need to insert a tape"
         end
     end
 
     function self:setVolume(volume)
-        self.tape.setVolume(volume)
+        if volume then
+            self.tape.setVolume(volume)
+        end
     end
 
     function self:play(chunk)
@@ -590,7 +592,7 @@ return {
     --- "Metadata" - [YouCube API](https://commandcracker.github.io/YouCube/) Version
     _API_VERSION = "0.0.0-poc.1.0.0",
     --- "Metadata" - Library Version
-    _VERSION     = "0.0.0-poc.1.1.0",
+    _VERSION     = "0.0.0-poc.1.2.0",
     --- "Metadata" - Description
     _DESCRIPTION = "Library for accessing YouCub's API",
     --- "Metadata" - Homepage / Url
