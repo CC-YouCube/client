@@ -7,7 +7,7 @@ Github Repository: https://github.com/Commandcracker/YouCube
 License: GPL-3.0
 ]]
 
-local _VERSION = "0.0.0-poc.0.5.0"
+local _VERSION = "0.0.0-poc.1.0.0"
 
 -- Libraries - OpenLibrarieLoader v1.0.0 --
 
@@ -24,7 +24,7 @@ local function is_lib(Table, Item)
     return false
 end
 
-local libs = { "youcubeapi", "numberformatter", "semver", "argparse" }
+local libs = { "youcubeapi", "numberformatter", "semver", "argparse", "string_pack" }
 local lib_paths = { ".", "./lib", "./apis", "./modules", "/", "/lib", "/apis", "/modules" }
 
 if _G.lOS then
@@ -449,8 +449,13 @@ local function play(url)
             parallel.waitForAll(
                 function()
                     if not args.no_video then
+                        local string_unpack
+                        if not string.unpack then
+                            string_unpack = libs.string_pack.unpack
+                        end
+
                         os.queueEvent("youcube:vid_playing", data)
-                        libs.youcubeapi.play_vid(video_buffer)
+                        libs.youcubeapi.play_vid(video_buffer, string_unpack)
                         os.queueEvent("youcube:vid_eof", data)
                     end
                 end,

@@ -53,6 +53,7 @@ All libraries that are used by the [client](https://github.com/Commandcracker/Yo
 | [numberformatter](https://github.com/Commandcracker/YouCube/blob/main/client/lib/numberformatter.lua) |
 | [semver](https://github.com/kikito/semver.lua)                                                        |
 | [youcubeapi](https://github.com/Commandcracker/YouCube/blob/main/client/lib/youcubeapi.lua)           |
+| [string_pack](https://gist.github.com/MCJack123/d5973e4d8b7e46991c5f99ac4b076aec)                     |
 
 #### UnicornPKG (Experimental)
 

@@ -497,7 +497,10 @@ end
     and [sanjuuni/websocket-player.lua](https://github.com/MCJack123/sanjuuni/blob/30dcabb4b56f1eb32c88e1bce384b0898367ebda/websocket-player.lua)
     @tparam Buffer buffer filled with frames
 ]]
-local function play_vid(buffer)
+local function play_vid(buffer, string_unpack)
+    if not string_unpack then
+        string_unpack = string.unpack
+    end
     local Fwidth, Fheight = term.getSize()
     local tracker = 0
 
@@ -546,8 +549,8 @@ local function play_vid(buffer)
         local data = Base64.decode(b64data)
         -- TODO: maybe verify checksums?
         assert(data:sub(1, 4) == "\0\0\0\0" and data:sub(9, 16) == "\0\0\0\0\0\0\0\0", "Invalid file")
-        local width, height = ("HH"):unpack(data, 5)
-        local c, n, pos = string.unpack("c1B", data, 17)
+        local width, height = string_unpack("HH", data, 5)
+        local c, n, pos = string_unpack("c1B", data, 17)
         local text = {}
         for y = 1, height do
             text[y] = ""
@@ -555,7 +558,7 @@ local function play_vid(buffer)
                 text[y] = text[y] .. c
                 n = n - 1
                 if n == 0 then
-                    c, n, pos = string.unpack("c1B", data, pos)
+                    c, n, pos = string_unpack("c1B", data, pos)
                 end
             end
         end
@@ -566,7 +569,7 @@ local function play_vid(buffer)
                 fg, bg = fg .. ("%x"):format(bit32.band(c, 0x0F)), bg .. ("%x"):format(bit32.rshift(c, 4))
                 n = n - 1
                 if n == 0 then
-                    c, n, pos = string.unpack("BB", data, pos)
+                    c, n, pos = string_unpack("BB", data, pos)
                 end
             end
             term.setCursorPos(1, y)
@@ -575,7 +578,7 @@ local function play_vid(buffer)
         pos = pos - 2
         local r, g, b
         for i = 0, 15 do
-            r, g, b, pos = string.unpack("BBB", data, pos)
+            r, g, b, pos = string_unpack("BBB", data, pos)
             term.setPaletteColor(2 ^ i, r / 255, g / 255, b / 255)
         end
         if fps == 0 then
@@ -592,7 +595,7 @@ return {
     --- "Metadata" - [YouCube API](https://commandcracker.github.io/YouCube/) Version
     _API_VERSION = "0.0.0-poc.1.0.0",
     --- "Metadata" - Library Version
-    _VERSION     = "0.0.0-poc.1.2.0",
+    _VERSION     = "0.0.0-poc.1.3.0",
     --- "Metadata" - Description
     _DESCRIPTION = "Library for accessing YouCub's API",
     --- "Metadata" - Homepage / Url
