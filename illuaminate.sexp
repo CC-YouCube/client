@@ -113,3 +113,4 @@
 
 (at /client/lib/semver.lua(linters -all))
 (at /client/lib/argparse.lua(linters -all))
+(at /client/lib/string_pack.lua(linters -all))
