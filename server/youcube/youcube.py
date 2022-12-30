@@ -401,6 +401,7 @@ def main() -> None:
         logger.warning("Sanjuuni not found.")
 
     port = int(getenv("PORT", "5000"))
+    host = getenv("HOST","0.0.0.0")
     trusted_proxies = getenv("TRUSTED_PROXIES")
 
     proxies = None
@@ -415,7 +416,7 @@ def main() -> None:
     if not NO_COLOR:
         print(Foreground.BRIGHT_GREEN, end="")
 
-    run_app(server.init(), port=port)
+    run_app(server.init(), host=host, port=port)
 
 
 if __name__ == "__main__":
