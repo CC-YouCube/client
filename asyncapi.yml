@@ -15,34 +15,33 @@ info:
     url: https://github.com/Commandcracker/YouCube
 
 servers:
-  public-primary:
+  primary:
+    url: wss://yc.tweaked-programs.cc
+    protocol: wss
+    description: |
+      **Primary Server**
+
+      Hosted on [hetzner](https://www.hetzner.com) in [Germany](https://duckduckgo.com/?t=ffab&q=Germany&ia=web&iaxm=about&iax=images) by [Sammy](https://github.com/1Turtle)
+
+      This server is very stable, this is, why it is the primary server.
+  sleepy:
     url: wss://youcube.knijn.one
     protocol: wss
     description: |
-      **Primary Public Server**
+      **Sleepy Server**
 
       Hosted on [nodespace](https://www.nodespace.net/) in [North Carolina](https://duckduckgo.com/?t=ffab&q=North+Carolina&ia=web&iax=about&iaxm=maps) by [EmmaKnijn](https://knijn.one/)
 
-      This server is pretty quick and slick. \
-      Thats also a reason, why this server is the primary one.
-  public-primary-insecure-fallback:
-    url: ws://lithium.knijn.one:5000
-    protocol: ws
-    description: |
-      **Primary Server without ssl**
-
-      Hosted on [nodespace](https://www.nodespace.net/) in [North Carolina](https://duckduckgo.com/?t=ffab&q=North+Carolina&ia=web&iax=about&iaxm=maps) by [EmmaKnijn](https://knijn.one/)
-
-      **This "Server" points to the primary server without SSL!**
-  public-fallback:
+      This server is sometimes sleeping.
+  fallback:
     url: wss://youcube.onrender.com
     protocol: wss
     description: |
-      **Public Fallback Server**
+      **Fallback Server**
 
       Hosted on [render](https://render.com/) in [Oregon (US West)](https://duckduckgo.com/?t=ffab&q=Oregon+(US+West)&ia=web&iaxm=about&iax=images) by [Commandcracker](https://github.com/Commandcracker)
 
-      This server is only meant to be used when the primary server is offline. \
+      This server is only meant to be used when all other servers are offline. \
       It's pretty slow, but it should do the job.
 
 defaultContentType: application/json

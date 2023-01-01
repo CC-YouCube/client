@@ -30,11 +30,12 @@ function API.new(websocket)
 end
 
 -- Look at the [Documentation](https://commandcracker.github.io/YouCube/) for moor information
+-- Contact the server owner on Discord, when the server is down
 local servers = {
     "ws://127.0.0.1:5000", -- Your server!
-    "wss://youcube.knijn.one", -- By EmmaKnijn, Contact EmmaKnijn#0043 on Discord if this doesn't work
-    "ws://lithium.knijn.one:5000", -- Insecure version of "wss://youcube.knijn.one", Dont Contact Emma if this doesn't work!
-    "wss://youcube.onrender.com" -- By Commandcracker, Contact Commandcracker#8528 on Discord, when the server is down
+    "wss://yc.tweaked-programs.cc", -- by Sammy#5900
+    "wss://youcube.knijn.one", -- By EmmaKnijn#0043
+    "wss://youcube.onrender.com" -- By Commandcracker#8528
 }
 
 if settings then
@@ -595,7 +596,7 @@ return {
     --- "Metadata" - [YouCube API](https://commandcracker.github.io/YouCube/) Version
     _API_VERSION = "0.0.0-poc.1.0.0",
     --- "Metadata" - Library Version
-    _VERSION     = "0.0.0-poc.1.3.0",
+    _VERSION     = "0.0.0-poc.1.3.1",
     --- "Metadata" - Description
     _DESCRIPTION = "Library for accessing YouCub's API",
     --- "Metadata" - Homepage / Url
