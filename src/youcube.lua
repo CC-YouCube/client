@@ -11,7 +11,7 @@ local _VERSION = "0.0.0-poc.1.0.0"
 
 -- Libraries - OpenLibrarieLoader v1.0.0 --
 
---TODO: Optional libs
+--TODO: Optional libs:
 -- For something like a JSON lib that is only needed for older CC Versions or
 -- optional logging.lua support
 
