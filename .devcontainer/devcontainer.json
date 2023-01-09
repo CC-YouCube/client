@@ -5,5 +5,5 @@
         "jackmacwindows.vscode-computercraft",
         "carlos-algms.make-task-provider"
     ],
-    "postCreateCommand": "ash .devcontainer/post.sh"
+    "postCreateCommand": "sudo make install-illuaminate-linux"
 }
