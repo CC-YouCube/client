@@ -70,7 +70,7 @@
 ;; Controls documentation generation.
 (doc
   ;; The path(s) where modules are located. This is used for guessing the module name of files, it is ignored when an explicit @module annotation is provided.
-  (library-path client/lib)
+  (library-path src/lib)
   
   ;; A list of custom module kinds and their display names.
   (module-kinds)
@@ -111,6 +111,6 @@
   ;; Whether to create an index.json file, with a dump of all terms. This may be useful for querying externally.
   (json-index true))
 
-(at /client/lib/semver.lua(linters -all))
-(at /client/lib/argparse.lua(linters -all))
-(at /client/lib/string_pack.lua(linters -all))
+(at /src/lib/semver.lua(linters -all))
+(at /src/lib/argparse.lua(linters -all))
+(at /src/lib/string_pack.lua(linters -all))

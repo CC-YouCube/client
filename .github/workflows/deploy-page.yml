@@ -5,7 +5,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "asyncapi.yml"
+      - "src/**.lua"
 
 jobs:
   deploy-page:
@@ -15,23 +15,20 @@ jobs:
       - name: Checkout 🛎️
         uses: actions/checkout@v3
 
-      #Using another action for AsyncAPI for validation
-      - name: Validate asyncapi.yml ✅
-        uses: WaleedAshraf/asyncapi-github-action@v0.0.8
-        with:
-          filepath: asyncapi.yml
+      - name: Install Lua 🧰
+        uses: leafo/gh-actions-lua@v9
 
-      #In case you do not want to use defaults, you for example want to use different template
-      - name: Generate HTML from asyncapi.yml 📄
-        uses: docker://asyncapi/github-action-for-generator:2.1.7
-        with:
-          template: "@asyncapi/html-template@0.28.1" #In case of template from npm, because of @ it must be in quotes
-          filepath: asyncapi.yml
-          parameters: baseHref=/YouCube/ sidebarOrganization=byTags #space separated list of key/values
-          output: generated-html
+      - name: Install Illuaminate 🧰
+        run: |
+          test -d bin || mkdir bin
+          test -f bin/illuaminate || wget -q -Obin/illuaminate https://squiddev.cc/illuaminate/bin/latest/illuaminate-linux-x86_64
+          chmod +x bin/illuaminate
+
+      - name: Generate documentation 📄
+        run: bin/illuaminate doc-gen
 
       #Using another action that takes generated HTML and pushes it to GH Pages
       - name: Deploy page 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: generated-html
+          folder: doc

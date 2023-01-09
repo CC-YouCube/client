@@ -1,12 +1,9 @@
 {
-    "dockerFile": "Dockerfile",
+    "image": "mcr.microsoft.com/vscode/devcontainers/base:alpine-3.16",
     "extensions": [
         "sumneko.lua",
         "jackmacwindows.vscode-computercraft",
-        "donjayamanne.python-extension-pack",
-        "ms-azuretools.vscode-docker",
-        "carlos-algms.make-task-provider",
-        "asyncapi.asyncapi-preview"
+        "carlos-algms.make-task-provider"
     ],
     "postCreateCommand": "ash .devcontainer/post.sh"
 }
