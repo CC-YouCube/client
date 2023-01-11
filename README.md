@@ -61,7 +61,7 @@ On [LevelOS](https://discord.com/invite/vBsjGqy99U) YouCube can be installed by 
 
 ![preview](.README/levelos.png)
 
-### Settings
+## Settings
 
 Settings that can be set with the CC: Tweaked [settings module](https://tweaked.cc/module/settings.html#v:get)
 
