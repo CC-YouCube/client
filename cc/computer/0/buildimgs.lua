@@ -8,6 +8,7 @@ local extract_path = table.remove(opts,1)
 print("[build] extraction path "..extract_path)
 local files = opts
 
+local verbosity = verbosity or 1
 
 --to turn a folder into a table
 local function gen_disk(ph)

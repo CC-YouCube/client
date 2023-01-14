@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: "checkout"
         uses: "actions/checkout@v3"
+      - name: "minify"
+        uses: "walksanatora/minify-lua"
       - name: "run cc"
         uses: "walksanatora/craftos-action@v1.0.4"
         with:
