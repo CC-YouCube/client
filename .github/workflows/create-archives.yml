@@ -19,16 +19,16 @@ jobs:
         uses: "walksanatora/lua-minify@main"
         with:
           find: "./src/ -name \"*.lua\""
-      #- name: "run cc"
-      #  uses: "walksanatora/craftos-action@v1.0.4"
-      #  with:
-      #    root: "cc"
-      #    timeout: "60"
-      #- name: "upload-images"
-      #  uses: "actions/upload-artifact@v3"
-      #  with:
-      #    name: "archives"
-      #    path: "cc/computer/0/output/*"
+      - name: "run cc"
+        uses: "walksanatora/craftos-action@v1.0.4"
+        with:
+          root: "cc"
+          timeout: "60"
+      - name: "upload-images"
+        uses: "actions/upload-artifact@v3"
+        with:
+          name: "archives"
+          path: "cc/computer/0/output/*"
       - name: "upload-minified"
         uses: "actions/upload-artifact@v3"
         with:
