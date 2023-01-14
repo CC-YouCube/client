@@ -18,7 +18,7 @@ jobs:
       - name: "minify"
         uses: "walksanatora/lua-minify@main"
         with:
-          find: "src/"
+          find: "src/ -name \"*.lua\""
       - name: "run cc"
         uses: "walksanatora/craftos-action@v1.0.4"
         with:
