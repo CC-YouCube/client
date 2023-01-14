@@ -1,0 +1,27 @@
+name: "build archives"
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "src/**.lua"
+      - "cc/**"
+
+jobs:
+  build-archives:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "checkout"
+        uses: "actions/checkout@v3"
+      - name: "run cc"
+        uses: "walksanatora/craftos-action@v1"
+        with:
+          root: "cc"
+          timeout: "60"
+      - name: "upload-images"
+        uses: "actions/upload-artifact@v3"
+        with:
+          name: "archives"
+          path: "cc/computer/0/output/*"
+        
