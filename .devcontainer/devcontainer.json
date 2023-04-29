@@ -1,9 +1,9 @@
 {
-    "image": "mcr.microsoft.com/vscode/devcontainers/base:alpine-3.16",
+    "image": "mcr.microsoft.com/vscode/devcontainers/base:alpine-3.17",
     "extensions": [
         "sumneko.lua",
         "jackmacwindows.vscode-computercraft",
         "carlos-algms.make-task-provider"
     ],
-    "postCreateCommand": "sudo make install-illuaminate-linux"
+    "postCreateCommand": "sudo make install-illuaminate"
 }
