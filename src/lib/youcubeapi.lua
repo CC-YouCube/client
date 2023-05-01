@@ -485,8 +485,8 @@ end
 local currnt_palette = {}
 
 for i = 0, 15 do
-    local r,g,b = term.getPaletteColour(2 ^ i)
-    currnt_palette[i] = {r,g,b}
+    local r, g, b = term.getPaletteColour(2 ^ i)
+    currnt_palette[i] = {r, g, b}
 end
 
 local function reset_term()
