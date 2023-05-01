@@ -71,7 +71,7 @@ var e,t;e=this,t=function(){"use strict";function e(e,t){var n=Object.keys(e);if
 
   const highlight = (match, field) => {
     const ourMatch = match.matches.find((x) => x.key === field);
-    if (!ourMatch) return match.item[field];
+    if (!ourMatch) return match.item[field] || "";
 
     const { value, indices } = ourMatch;
 
