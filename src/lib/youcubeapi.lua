@@ -482,9 +482,21 @@ function Buffer.new(filler, size)
     return self
 end
 
+local currnt_palette = {}
+
+for i = 0, 15 do
+    local r,g,b = term.getPaletteColour(2 ^ i)
+    currnt_palette[i] = {r,g,b}
+end
+
 local function reset_term()
     for i = 0, 15 do
-        term.setPaletteColor(2 ^ i, term.nativePaletteColor(2 ^ i))
+        term.setPaletteColor(
+        2 ^ i,
+        currnt_palette[i][1],
+        currnt_palette[i][2],
+        currnt_palette[i][3]
+    )
     end
     term.setBackgroundColor(colors.black)
     term.setTextColor(colors.white)
@@ -498,7 +510,7 @@ end
     and [sanjuuni/websocket-player.lua](https://github.com/MCJack123/sanjuuni/blob/30dcabb4b56f1eb32c88e1bce384b0898367ebda/websocket-player.lua)
     @tparam Buffer buffer filled with frames
 ]]
-local function play_vid(buffer, string_unpack)
+local function play_vid(buffer, force_fps, string_unpack)
     if not string_unpack then
         string_unpack = string.unpack
     end
@@ -510,6 +522,8 @@ local function play_vid(buffer, string_unpack)
     end
 
     local fps = tonumber(buffer:next())
+    if force_fps then fps = force_fps end
+
     -- Adjust buffer size
     buffer.size = math.ceil(fps) * 2
 
@@ -596,7 +610,7 @@ return {
     --- "Metadata" - [YouCube API](https://commandcracker.github.io/YouCube/) Version
     _API_VERSION = "0.0.0-poc.1.0.0",
     --- "Metadata" - Library Version
-    _VERSION     = "0.0.0-poc.1.3.1",
+    _VERSION     = "0.0.0-poc.1.4.0",
     --- "Metadata" - Description
     _DESCRIPTION = "Library for accessing YouCub's API",
     --- "Metadata" - Homepage / Url

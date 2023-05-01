@@ -7,7 +7,7 @@ Github Repository: https://github.com/Commandcracker/YouCube
 License: GPL-3.0
 ]]
 
-local _VERSION = "0.0.0-poc.1.0.0"
+local _VERSION = "0.0.0-poc.1.1.0"
 
 -- Libraries - OpenLibrarieLoader v1.0.0 --
 
@@ -112,7 +112,15 @@ parser:flag "--lp" "--loop-playlist"
     :target "loop_playlist"
     :action "store_true"
 
+parser:option "--fps"
+    :description "Force sanjuuni to use a specified frame rate"
+    :target "force_fps"
+
 local args = parser:parse { ... }
+
+if args.force_fps then
+    args.force_fps = tonumber(args.force_fps)
+end
 
 if args.volume then
     args.volume = tonumber(args.volume)
@@ -188,7 +196,7 @@ end
 -- update check --
 
 local function get_versions()
-    local url = "https://raw.githubusercontent.com/Commandcracker/YouCube/main/versions.json"
+    local url = "https://raw.githubusercontent.com/CC-YouCube/installer/main/versions.json"
 
     -- Check if the URL is valid
     local ok, err = http.checkURL(url)
@@ -427,7 +435,12 @@ local function play(url)
             -- Fill Buffers
             while true do
                 os.queueEvent("youcube:fill_buffers")
-                os.pullEvent()
+
+                local event = os.pullEventRaw()
+
+                if event == "terminate" then
+                    libs.youcubeapi.reset_term()
+                end
 
                 if not args.no_audio then
                     audio_buffer:fill()
@@ -455,7 +468,7 @@ local function play(url)
                         end
 
                         os.queueEvent("youcube:vid_playing", data)
-                        libs.youcubeapi.play_vid(video_buffer, string_unpack)
+                        libs.youcubeapi.play_vid(video_buffer, args.force_fps, string_unpack)
                         os.queueEvent("youcube:vid_eof", data)
                     end
                 end,
