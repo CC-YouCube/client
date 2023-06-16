@@ -35,7 +35,7 @@ local servers = {
     "ws://127.0.0.1:5000", -- Your server!
     "wss://yc.tweaked-programs.cc", -- by Sammy#5900
     "wss://youcube.knijn.one", -- By EmmaKnijn#0043
-    "wss://youcube.onrender.com" -- By Commandcracker#8528
+    "wss://youcube.onrender.com", -- By Commandcracker#8528
 }
 
 if settings then
@@ -75,10 +75,12 @@ end
 
 --- Connects to a YouCub Server
 function API:detect_bestest_server(_server, _verbose)
+    if _server then
+        table.insert(servers, 1, _server)
+    end
 
-    if _server then table.insert(servers, 1, _server) end
-
-    for i, server in pairs(servers) do
+    for i = 1, #servers do
+        local server = servers[i]
         local ok, err = http.checkURL(server:gsub("^ws://", "http://"):gsub("^wss://", "https://"))
 
         if ok then
@@ -111,9 +113,7 @@ end
 -- @tparam string filter action filter
 -- @treturn table retval data
 function API:receive(filter)
-    local status, retval = pcall(
-        self.websocket.receive
-    )
+    local status, retval = pcall(self.websocket.receive)
     if not status then
         error("Lost connection to server\n" .. retval)
     end
@@ -145,10 +145,7 @@ end
 --- Send data to The YouCub Server
 -- @tparam table data data to send
 function API:send(data)
-    local status, retval = pcall(
-        self.websocket.send,
-        textutils.serialiseJSON(data)
-    )
+    local status, retval = pcall(self.websocket.send, textutils.serialiseJSON(data))
     if not status then
         error("Lost connection to server\n" .. retval)
     end
@@ -167,21 +164,29 @@ local b64str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/
 -- @treturn string string decoded string
 function Base64.decode(str)
     local retval = ""
-    for s in str:gmatch "...." do
-        if s:sub(3, 4) == '==' then
-            retval = retval ..
-                string.char(bit32.bor(bit32.lshift(b64str:find(s:sub(1, 1)) - 1, 2),
-                    bit32.rshift(b64str:find(s:sub(2, 2)) - 1, 4)))
-        elseif s:sub(4, 4) == '=' then
-            local n = (b64str:find(s:sub(1, 1)) - 1) * 4096 + (b64str:find(s:sub(2, 2)) - 1) * 64 +
-                (b64str:find(s:sub(3, 3)) - 1)
+    for s in str:gmatch("....") do
+        if s:sub(3, 4) == "==" then
+            retval = retval
+                .. string.char(
+                    bit32.bor(
+                        bit32.lshift(b64str:find(s:sub(1, 1)) - 1, 2),
+                        bit32.rshift(b64str:find(s:sub(2, 2)) - 1, 4)
+                    )
+                )
+        elseif s:sub(4, 4) == "=" then
+            local n = (b64str:find(s:sub(1, 1)) - 1) * 4096
+                + (b64str:find(s:sub(2, 2)) - 1) * 64
+                + (b64str:find(s:sub(3, 3)) - 1)
             retval = retval .. string.char(bit32.extract(n, 10, 8)) .. string.char(bit32.extract(n, 2, 8))
         else
-            local n = (b64str:find(s:sub(1, 1)) - 1) * 262144 + (b64str:find(s:sub(2, 2)) - 1) * 4096 +
-                (b64str:find(s:sub(3, 3)) - 1) * 64 + (b64str:find(s:sub(4, 4)) - 1)
-            retval = retval ..
-                string.char(bit32.extract(n, 16, 8)) ..
-                string.char(bit32.extract(n, 8, 8)) .. string.char(bit32.extract(n, 0, 8))
+            local n = (b64str:find(s:sub(1, 1)) - 1) * 262144
+                + (b64str:find(s:sub(2, 2)) - 1) * 4096
+                + (b64str:find(s:sub(3, 3)) - 1) * 64
+                + (b64str:find(s:sub(4, 4)) - 1)
+            retval = retval
+                .. string.char(bit32.extract(n, 16, 8))
+                .. string.char(bit32.extract(n, 8, 8))
+                .. string.char(bit32.extract(n, 0, 8))
         end
     end
     return retval
@@ -193,9 +198,9 @@ end
 -- @treturn bytes chunk `16 * 1024` bit chunk
 function API:get_chunk(chunkindex, id)
     self:send({
-        ["action"]     = "get_chunk",
+        ["action"] = "get_chunk",
         ["chunkindex"] = chunkindex,
-        ["id"]         = id
+        ["id"] = id,
     })
     return Base64.decode(self:receive("chunk").chunk)
 end
@@ -208,11 +213,11 @@ end
 -- @treturn string line one line of the given 32vid
 function API:get_vid(tracker, id, width, height)
     self:send({
-        ["action"]  = "get_vid",
+        ["action"] = "get_vid",
         ["tracker"] = tracker,
-        ["id"]      = id,
-        ["width"]   = width * 2,
-        ["height"]  = height * 3
+        ["id"] = id,
+        ["width"] = width * 2,
+        ["height"] = height * 3,
     })
     return self:receive("vid")
 end
@@ -223,10 +228,10 @@ end
 function API:request_media(url, width, height)
     local request = {
         ["action"] = "request_media",
-        ["url"]    = url
+        ["url"] = url,
     }
     if width and height then
-        request.width  = width * 2
+        request.width = width * 2
         request.height = height * 3
     end
     self:send(request)
@@ -237,7 +242,7 @@ end
 --@treturn table json response
 function API:handshake()
     self:send({
-        ["action"] = "handshake"
+        ["action"] = "handshake",
     })
     return self:receive("handshake")
 end
@@ -290,7 +295,7 @@ end
 -- @tparam speaker speaker The speaker
 -- @treturn AudioDevice|Speaker instance
 function Speaker.new(speaker)
-    local self = AudioDevice.new { speaker = speaker }
+    local self = AudioDevice.new({ speaker = speaker })
 
     function self:validate()
         if not decoder then
@@ -326,7 +331,7 @@ local Tape = {}
 -- @tparam tape tape The tape_drive
 -- @treturn AudioDevice|Tape instance
 function Tape.new(tape)
-    local self = AudioDevice.new { tape = tape }
+    local self = AudioDevice.new({ tape = tape })
 
     function self:validate()
         if not self.tape.isReady() then
@@ -396,9 +401,9 @@ local AudioFiller = {}
 -- @treturn AudioFiller|Filler instance
 function AudioFiller.new(youcubeapi, id)
     local self = {
-        id         = id,
+        id = id,
         chunkindex = 0,
-        youcubeapi = youcubeapi
+        youcubeapi = youcubeapi,
     }
 
     function self:next()
@@ -423,17 +428,17 @@ local VideoFiller = {}
 -- @treturn VideoFiller|Filler instance
 function VideoFiller.new(youcubeapi, id, width, height)
     local self = {
-        id         = id,
-        width      = width,
-        height     = height,
-        tracker    = 0,
-        youcubeapi = youcubeapi
+        id = id,
+        width = width,
+        height = height,
+        tracker = 0,
+        youcubeapi = youcubeapi,
     }
 
     function self:next()
         local response = self.youcubeapi:get_vid(self.tracker, self.id, self.width, self.height)
-        for _, line in pairs(response.lines) do
-            self.tracker = self.tracker + #line + 1
+        for i = 1, #response.lines do
+            self.tracker = self.tracker + #response.lines[i] + 1
         end
         return response.lines
     end
@@ -453,12 +458,14 @@ local Buffer = {}
 function Buffer.new(filler, size)
     local self = {
         filler = filler,
-        size   = size
+        size = size,
     }
     self.buffer = {}
 
     function self:next()
-        while #self.buffer == 0 do os.pullEvent() end -- Wait until next is available
+        while #self.buffer == 0 do
+            os.pullEvent()
+        end -- Wait until next is available
         local next = self.buffer[1]
         table.remove(self.buffer, 1)
         return next
@@ -468,11 +475,11 @@ function Buffer.new(filler, size)
         if #self.buffer < self.size then
             local next = filler:next()
             if type(next) == "table" then
-                for _, line in pairs(next) do
-                    table.insert(self.buffer, line)
+                for i = 1, #next do
+                    self.buffer[#self.buffer + 1] = next[i]
                 end
             else
-                table.insert(self.buffer, next)
+                self.buffer[#self.buffer + 1] = next
             end
             return true
         end
@@ -486,17 +493,12 @@ local currnt_palette = {}
 
 for i = 0, 15 do
     local r, g, b = term.getPaletteColour(2 ^ i)
-    currnt_palette[i] = {r, g, b}
+    currnt_palette[i] = { r, g, b }
 end
 
 local function reset_term()
     for i = 0, 15 do
-        term.setPaletteColor(
-        2 ^ i,
-        currnt_palette[i][1],
-        currnt_palette[i][2],
-        currnt_palette[i][3]
-    )
+        term.setPaletteColor(2 ^ i, currnt_palette[i][1], currnt_palette[i][2], currnt_palette[i][3])
     end
     term.setBackgroundColor(colors.black)
     term.setTextColor(colors.white)
@@ -522,7 +524,9 @@ local function play_vid(buffer, force_fps, string_unpack)
     end
 
     local fps = tonumber(buffer:next())
-    if force_fps then fps = force_fps end
+    if force_fps then
+        fps = force_fps
+    end
 
     -- Adjust buffer size
     buffer.size = math.ceil(fps) * 2
@@ -534,7 +538,7 @@ local function play_vid(buffer, force_fps, string_unpack)
     end
     term.clear()
 
-    local start = os.epoch "utc"
+    local start = os.epoch("utc")
     local frame_count = 0
     while true do
         frame_count = frame_count + 1
@@ -600,7 +604,9 @@ local function play_vid(buffer, force_fps, string_unpack)
             read()
             break
         else
-            while os.epoch "utc" < start + (frame_count + 1) / fps * 1000 do sleep(1 / fps) end
+            while os.epoch("utc") < start + (frame_count + 1) / fps * 1000 do
+                sleep(1 / fps)
+            end
         end
     end
     reset_term()
@@ -610,22 +616,22 @@ return {
     --- "Metadata" - [YouCube API](https://commandcracker.github.io/YouCube/) Version
     _API_VERSION = "0.0.0-poc.1.0.0",
     --- "Metadata" - Library Version
-    _VERSION     = "0.0.0-poc.1.4.0",
+    _VERSION = "0.0.0-poc.1.4.1",
     --- "Metadata" - Description
     _DESCRIPTION = "Library for accessing YouCub's API",
     --- "Metadata" - Homepage / Url
-    _URL         = "https://github.com/Commandcracker/YouCube",
+    _URL = "https://github.com/Commandcracker/YouCube",
     --- "Metadata" - License
-    _LICENSE     = "GPL-3.0",
-    API          = API,
-    AudioDevice  = AudioDevice,
-    Speaker      = Speaker,
-    Tape         = Tape,
-    Base64       = Base64,
-    Filler       = Filler,
-    AudioFiller  = AudioFiller,
-    VideoFiller  = VideoFiller,
-    Buffer       = Buffer,
-    play_vid     = play_vid,
-    reset_term   = reset_term
+    _LICENSE = "GPL-3.0",
+    API = API,
+    AudioDevice = AudioDevice,
+    Speaker = Speaker,
+    Tape = Tape,
+    Base64 = Base64,
+    Filler = Filler,
+    AudioFiller = AudioFiller,
+    VideoFiller = VideoFiller,
+    Buffer = Buffer,
+    play_vid = play_vid,
+    reset_term = reset_term,
 }

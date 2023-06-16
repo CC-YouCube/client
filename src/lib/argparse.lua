@@ -151,8 +151,8 @@ local function Do(Lo,Uo)local Co={}for Mo,Fo in ipairs(Lo)do local
 Wo=jo(Fo,Uo)for Mo,Yo in ipairs(Wo)do table.insert(Co,Yo)end end return Co end
 function pt:_get_element_help(Po)local Vo=Po:_get_label_lines()local
 Bo=bo(Po:_get_description())local Go={}local
-Ko=self:_inherit_property("help_usage_margin",3)local Qo=(" "):rep(Ko)local
-Jo=self:_inherit_property("help_description_margin",25)local
+Ko=self:_inherit_property("help_usage_margin",1)local Qo=(" "):rep(Ko)local
+Jo=self:_inherit_property("help_description_margin",23)local
 Xo=(" "):rep(Jo)local Zo=self:_inherit_property("help_max_width")if Zo then
 local ei=math.max(Zo-Jo,10)Bo=Do(Bo,ei)end if#Vo[1]>=(Jo-Ko)then for ti,ai in
 ipairs(Vo)do table.insert(Go,Qo..ai)end for oi,ii in ipairs(Bo)do
@@ -472,6 +472,6 @@ tostring(jr).."\noriginal "..debug.traceback("",2):sub(2)end function
 pt:pparse(xr)local zr local Er,Tr=xpcall(function()return
 self:_parse(xr,function(Ar,Or)zr=Or error(Or,0)end)end,qr)if Er then return
 true,Tr elseif not zr then error(Tr,0)else return false,zr end end local
-Ir={}Ir.version="0.7.2"setmetatable(Ir,{__call=function(Nr,...)return
+Ir={}Ir.version="0.7.3"setmetatable(Ir,{__call=function(Nr,...)return
 pt(vr[0]):add_help(true)(...)end})return
 Ir

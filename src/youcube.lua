@@ -7,17 +7,18 @@ Github Repository: https://github.com/Commandcracker/YouCube
 License: GPL-3.0
 ]]
 
-local _VERSION = "0.0.0-poc.1.1.0"
+local _VERSION = "0.0.0-poc.1.1.1"
 
--- Libraries - OpenLibrarieLoader v1.0.0 --
+-- Libraries - OpenLibrarieLoader v1.0.1 --
 
 --TODO: Optional libs:
 -- For something like a JSON lib that is only needed for older CC Versions or
 -- optional logging.lua support
 
-local function is_lib(Table, Item)
-    for key, value in ipairs(Table) do
-        if value == Item or value .. ".lua" == Item then
+local function is_lib(libs, lib)
+    for i = 1, #libs do
+        local value = libs[i]
+        if value == lib or value .. ".lua" == lib then
             return true, value
         end
     end
@@ -27,45 +28,52 @@ end
 local libs = { "youcubeapi", "numberformatter", "semver", "argparse", "string_pack" }
 local lib_paths = { ".", "./lib", "./apis", "./modules", "/", "/lib", "/apis", "/modules" }
 
+-- LevelOS Support
 if _G.lOS then
-    table.insert(lib_paths, "/Program_Files/YouCube/lib")
+    lib_paths[#lib_paths + 1] = "/Program_Files/YouCube/lib"
 end
 
-for i, path in pairs(lib_paths) do
+local function load_lib(lib)
+    if require then
+        return require(lib:gsub(".lua", ""))
+    end
+    return dofile(lib)
+end
+
+for i_path = 1, #lib_paths do
+    local path = lib_paths[i_path]
     if fs.exists(path) then
-        for _i, file_name in pairs(fs.list(path)) do
-            local found, lib = is_lib(libs, file_name)
-            if found and libs[lib] == nil then
-                if require then
-                    libs[lib] = require(path .. "/" .. file_name:gsub(".lua", ""))
-                else
-                    libs[lib] = dofile(path .. "/" .. file_name)
-                end
+        local files = fs.list(path)
+        for i_file = 1, #files do
+            local found, lib = is_lib(libs, files[i_file])
+            if found and lib ~= nil and libs[lib] == nil then
+                libs[lib] = load_lib(path .. "/" .. files[i_file])
             end
         end
     end
 end
 
-for key, lib in ipairs(libs) do
+for i = 1, #libs do
+    local lib = libs[i]
     if libs[lib] == nil then
-        error("Library \"" .. lib .. "\" not found")
+        error(('Library "%s" not found.'):format(lib))
     end
 end
 
 -- args --
 
-local program_name
-if arg then
-    program_name = arg[0]
-else
-    program_name = fs.getName(shell.getRunningProgram()):gsub("[\\.].*$", "")
+local function get_program_name()
+    if arg then
+        return arg[0]
+    end
+    return fs.getName(shell.getRunningProgram()):gsub("[\\.].*$", "")
 end
+
+-- stylua: ignore start
 
 local parser = libs.argparse {
     help_max_width = ({ term.getSize() })[1],
-    help_usage_margin = 1,
-    help_description_margin = 23,
-    name = program_name
+    name = get_program_name()
 }
     :description "Official YouCube client for accessing media from services like YouTube"
 
@@ -116,7 +124,9 @@ parser:option "--fps"
     :description "Force sanjuuni to use a specified frame rate"
     :target "force_fps"
 
-local args = parser:parse { ... }
+-- stylua: ignore end
+
+local args = parser:parse({ ... })
 
 if args.force_fps then
     args.force_fps = tonumber(args.force_fps)
@@ -156,42 +166,50 @@ if periphemu then
     config.set("http_max_websocket_message", 2 ^ 30)
 end
 
+local function get_audiodevices()
+    local audiodevices = {}
+
+    local speakers = { peripheral.find("speaker") }
+    for i = 1, #speakers do
+        audiodevices[#audiodevices + 1] = libs.youcubeapi.Speaker.new(speakers[i])
+    end
+
+    local tapes = { peripheral.find("tape_drive") }
+    for i = 1, #tapes do
+        audiodevices[#audiodevices + 1] = libs.youcubeapi.Tape.new(tapes[i])
+    end
+
+    if #audiodevices == 0 then
+        -- Disable audio when no audiodevice is found
+        args.no_audio = true
+        return audiodevices
+    end
+
+    -- Validate audiodevices
+    local last_error
+    local valid_audiodevices = {}
+
+    for i = 1, #audiodevices do
+        local audiodevice = audiodevices[i]
+        local _error = audiodevice:validate()
+        if _error == nil then
+            valid_audiodevices[#valid_audiodevices + 1] = audiodevice
+        else
+            last_error = _error
+        end
+    end
+
+    if #valid_audiodevices == 0 then
+        error(last_error)
+    end
+
+    return valid_audiodevices
+end
+
 -- main --
 
-local speakers = { peripheral.find("speaker") }
-local tapes = { peripheral.find("tape_drive") }
-
-if #speakers == 0 and #tapes == 0 then
-    error("You need a tapedrive or speaker in order to use YouCube!")
-end
-
 local youcubeapi = libs.youcubeapi.API.new()
-
-local audiodevices = {}
-
-for _, speaker in pairs(speakers) do
-    table.insert(audiodevices, libs.youcubeapi.Speaker.new(speaker))
-end
-
-for _, tape in pairs(tapes) do
-    table.insert(audiodevices, libs.youcubeapi.Tape.new(tape))
-end
-
-local last_error
-local valid_audiodevices = {}
-
-for i, audiodevice in pairs(audiodevices) do
-    local _error = audiodevice:validate()
-    if _error ~= nil then
-        last_error = _error
-    else
-        table.insert(valid_audiodevices, audiodevice)
-    end
-end
-
-if #valid_audiodevices == 0 then
-    error(last_error)
-end
+local audiodevices = get_audiodevices()
 
 -- update check --
 
@@ -201,13 +219,13 @@ local function get_versions()
     -- Check if the URL is valid
     local ok, err = http.checkURL(url)
     if not ok then
-        printError("Invalid Update URL.", "\"" .. url .. "\" ", err)
+        printError("Invalid Update URL.", '"' .. url .. '" ', err)
         return
     end
 
     local response, http_err = http.get(url, nil, true)
     if not response then
-        printError("Failed to retreat data from update URL. \"" .. url .. "\" (" .. http_err .. ")")
+        printError('Failed to retreat data from update URL. "' .. url .. '" (' .. http_err .. ")")
         return
     end
 
@@ -215,6 +233,22 @@ local function get_versions()
     response.close()
 
     return textutils.unserialiseJSON(sResponse)
+end
+
+local function write_colored(text, color)
+    term.setTextColor(color)
+    term.write(text)
+end
+
+local function new_line()
+    local w, h = term.getSize()
+    local x, y = term.getCursorPos()
+    if y + 1 <= h then
+        term.setCursorPos(1, y + 1)
+    else
+        term.setCursorPos(1, h)
+        term.scroll(1)
+    end
 end
 
 local function write_outdated(current, latest)
@@ -225,87 +259,61 @@ local function write_outdated(current, latest)
     end
 
     term.write(current)
-    term.setTextColor(colors.lightGray)
-    term.write(" -> ")
-    term.setTextColor(colors.lime)
-    term.write(latest)
+    write_colored(" -> ", colors.lightGray)
+    write_colored(latest, colors.lime)
     term.setTextColor(colors.white)
+    new_line()
 end
 
 local function can_update(name, current, latest)
     if libs.semver(current) < libs.semver(latest) then
         term.write(name .. " ")
-
         write_outdated(current, latest)
-        print()
     end
 end
 
 local function update_checker()
     local versions = get_versions()
-    if versions == nil then return end
+    if versions == nil then
+        return
+    end
 
-    can_update(
-        "youcube",
-        _VERSION,
-        versions.client.version
-    )
-    can_update(
-        "youcubeapi",
-        libs.youcubeapi._VERSION,
-        versions.client.libraries.youcubeapi.version
-    )
-    can_update(
-        "numberformatter",
-        libs.numberformatter._VERSION,
-        versions.client.libraries.numberformatter.version
-    )
-    can_update(
-        "semver",
-        tostring(libs.semver._VERSION),
-        versions.client.libraries.semver.version
-    )
-    can_update(
-        "argparse",
-        libs.argparse.version,
-        versions.client.libraries.argparse.version
-    )
+    can_update("youcube", _VERSION, versions.client.version)
+    can_update("youcubeapi", libs.youcubeapi._VERSION, versions.client.libraries.youcubeapi.version)
+    can_update("numberformatter", libs.numberformatter._VERSION, versions.client.libraries.numberformatter.version)
+    can_update("semver", tostring(libs.semver._VERSION), versions.client.libraries.semver.version)
+    can_update("argparse", libs.argparse.version, versions.client.libraries.argparse.version)
 
     local handshake = youcubeapi:handshake()
 
     if libs.semver(handshake.server.version) < libs.semver(versions.server.version) then
         print("Tell the server owner to update their server!")
         write_outdated(handshake.server.version, versions.server.version)
-        print()
     end
 
     if not libs.semver(libs.youcubeapi._API_VERSION) ^ libs.semver(handshake.api.version) then
         print("Client is not compatible with server")
-        term.setTextColor(colors.red)
-        term.write(libs.youcubeapi._API_VERSION)
-        term.setTextColor(colors.lightGray)
-        term.write(" ^ ")
-        term.setTextColor(colors.red)
-        term.write(handshake.api.version)
+        write_colored(libs.youcubeapi._API_VERSION, colors.red)
+        write_colored(" ^ ", colors.lightGray)
+        write_colored(handshake.api.version, colors.red)
         term.setTextColor(colors.white)
-        print()
+        new_line()
     end
 
     if libs.semver(libs.youcubeapi._API_VERSION) < libs.semver(versions.api.version) then
         print("Your client is using an outdated API version")
         write_outdated(libs.youcubeapi._API_VERSION, versions.api.version)
-        print()
     end
 
     if libs.semver(handshake.api.version) < libs.semver(versions.api.version) then
         print("The server is using an outdated API version")
         write_outdated(libs.youcubeapi._API_VERSION, versions.api.version)
-        print()
     end
 end
 
 local function play_audio(buffer, title)
-    for _, audiodevice in pairs(valid_audiodevices) do
+    for i = 1, #audiodevices do
+        local audiodevice = audiodevices[i]
         audiodevice:reset()
         audiodevice:setLabel(title)
         audiodevice:setVolume(args.volume)
@@ -321,10 +329,11 @@ local function play_audio(buffer, title)
 
         if chunk == "" then
             local play_functions = {}
-            for _, audiodevice in pairs(valid_audiodevices) do
-                table.insert(play_functions, function()
+            for i = 1, #audiodevices do
+                local audiodevice = audiodevices[i]
+                play_functions[#play_functions + 1] = function()
                     audiodevice:play()
-                end)
+                end
             end
 
             parallel.waitForAll(table.unpack(play_functions))
@@ -332,7 +341,8 @@ local function play_audio(buffer, title)
         end
 
         local write_functions = {}
-        for _, audiodevice in pairs(valid_audiodevices) do
+        for i = 1, #audiodevices do
+            local audiodevice = audiodevices[i]
             table.insert(write_functions, function()
                 audiodevice:write(chunk)
             end)
@@ -348,6 +358,11 @@ local max_back = settings.get("youcube.max_back") or 32
 local queue = {}
 local restart = false
 -- #endregion
+
+-- keys
+local skip_key = settings.get("youcube.keys.skip") or keys.d
+local restart_key = settings.get("youcube.keys.restart") or keys.r
+local back_key = settings.get("youcube.keys.back") or keys.a
 
 local function play(url)
     restart = false
@@ -365,15 +380,14 @@ local function play(url)
     repeat
         data = youcubeapi:receive()
         if data.action == "status" then
+            os.queueEvent("youcube:status", data)
             term.setCursorPos(x, y)
             term.clearLine()
             term.write("Status: ")
-            term.setTextColor(colors.green)
-            os.queueEvent("youcube:status", data)
-            term.write(data.message)
+            write_colored(data.message, colors.green)
             term.setTextColor(colors.white)
         else
-            print()
+            new_line()
         end
     until data.action == "media"
 
@@ -400,22 +414,12 @@ local function play(url)
     end
 
     local video_buffer = libs.youcubeapi.Buffer.new(
-        libs.youcubeapi.VideoFiller.new(
-            youcubeapi,
-            data.id,
-            term.getSize()
-        ),
-        --[[
-            Most videos run on 30 fps, so we store 2s of video.
-        ]]
-        60
+        libs.youcubeapi.VideoFiller.new(youcubeapi, data.id, term.getSize()),
+        60 -- Most videos run on 30 fps, so we store 2s of video.
     )
 
     local audio_buffer = libs.youcubeapi.Buffer.new(
-        libs.youcubeapi.AudioFiller.new(
-            youcubeapi,
-            data.id
-        ),
+        libs.youcubeapi.AudioFiller.new(youcubeapi, data.id),
         --[[
             We want to buffer 1024 chunks.
             One chunks is 16 bits.
@@ -430,119 +434,128 @@ local function play(url)
         term.write("[DEBUG MODE]")
     end
 
-    parallel.waitForAny(
-        function()
-            -- Fill Buffers
-            while true do
-                os.queueEvent("youcube:fill_buffers")
+    local function fill_buffers()
+        while true do
+            os.queueEvent("youcube:fill_buffers")
 
-                local event = os.pullEventRaw()
+            local event = os.pullEventRaw()
 
-                if event == "terminate" then
-                    libs.youcubeapi.reset_term()
-                end
-
-                if not args.no_audio then
-                    audio_buffer:fill()
-                end
-
-                if args.verbose then
-                    term.setCursorPos(1, ({ term.getSize() })[2])
-                    term.clearLine()
-                    term.write("Audio_Buffer: " .. #audio_buffer.buffer)
-                end
-
-                if not args.no_video then
-                    video_buffer:fill()
-                end
+            if event == "terminate" then
+                libs.youcubeapi.reset_term()
             end
-        end,
-        function()
-            os.queueEvent("youcube:playing")
-            parallel.waitForAll(
-                function()
-                    if not args.no_video then
-                        local string_unpack
-                        if not string.unpack then
-                            string_unpack = libs.string_pack.unpack
-                        end
 
-                        os.queueEvent("youcube:vid_playing", data)
-                        libs.youcubeapi.play_vid(video_buffer, args.force_fps, string_unpack)
-                        os.queueEvent("youcube:vid_eof", data)
-                    end
-                end,
-                function()
-                    if not args.no_audio then
-                        os.queueEvent("youcube:audio_playing", data)
-                        play_audio(audio_buffer, data.title)
-                        os.queueEvent("youcube:audio_eof", data)
-                    end
-                end
-            )
-        end,
-        function()
-            while true do
-                local _, key = os.pullEvent("key")
-                if key == (settings.get("youcube.keys.skip") or keys.d) then
-                    table.insert(back_buffer, url) --finished playing, push the value to the back buffer
-                    if #back_buffer > max_back then
-                        table.remove(back_buffer, 1) --remove it from the front of the buffer
-                    end
-                    if not args.no_video then
-                        libs.youcubeapi.reset_term()
-                    end
-                    break
-                elseif key == (settings.get("youcube.keys.restart") or keys.r) then
-                    table.insert(queue, url) --add the current song to upcoming
-                    if not args.no_video then
-                        libs.youcubeapi.reset_term()
-                    end
-                    restart = true
-                    break
-                end
+            if not args.no_audio then
+                audio_buffer:fill()
+            end
+
+            if args.verbose then
+                term.setCursorPos(1, ({ term.getSize() })[2])
+                term.clearLine()
+                term.write("Audio_Buffer: " .. #audio_buffer.buffer)
+            end
+
+            if not args.no_video then
+                video_buffer:fill()
             end
         end
-    )
+    end
+
+    local function _play_video()
+        if not args.no_video then
+            local string_unpack
+            if not string.unpack then
+                string_unpack = libs.string_pack.unpack
+            end
+
+            os.queueEvent("youcube:vid_playing", data)
+            libs.youcubeapi.play_vid(video_buffer, args.force_fps, string_unpack)
+            os.queueEvent("youcube:vid_eof", data)
+        end
+    end
+
+    local function _play_audio()
+        if not args.no_audio then
+            os.queueEvent("youcube:audio_playing", data)
+            play_audio(audio_buffer, data.title)
+            os.queueEvent("youcube:audio_eof", data)
+        end
+    end
+
+    local function _play_media()
+        os.queueEvent("youcube:playing")
+        parallel.waitForAll(_play_video, _play_audio)
+    end
+
+    local function _hotkey_handler()
+        while true do
+            local _, key = os.pullEvent("key")
+
+            if key == skip_key then
+                back_buffer[#back_buffer + 1] = url --finished playing, push the value to the back buffer
+                if #back_buffer > max_back then
+                    back_buffer[1] = nil --remove it from the front of the buffer
+                end
+                if not args.no_video then
+                    libs.youcubeapi.reset_term()
+                end
+                break
+            end
+
+            if key == restart_key then
+                queue[#queue + 1] = url --add the current song to upcoming
+                if not args.no_video then
+                    libs.youcubeapi.reset_term()
+                end
+                restart = true
+                break
+            end
+        end
+    end
+
+    parallel.waitForAny(fill_buffers, _play_media, _hotkey_handler)
 
     if data.playlist_videos then
         return data.playlist_videos
     end
 end
 
+local function shuffle_playlist(playlist)
+    local shuffled = {}
+    for i = 1, #queue do
+        local pos = math.random(1, #shuffled + 1)
+        shuffled[pos] = queue[i]
+    end
+    return shuffled
+end
+
 local function play_playlist(playlist)
     queue = playlist
     if args.shuffle then
-        local shuffled = {}
-        for i, v in pairs(queue) do
-            local pos = math.random(1, #shuffled + 1)
-            table.insert(shuffled, pos, v)
-        end
-        queue = shuffled
+        queue = shuffle_playlist(queue)
     end
     while #queue ~= 0 do
         local pl = table.remove(queue)
-        parallel.waitForAny(
-            function()
-                while true do
-                    local _, key = os.pullEvent("key")
-                    if key == (settings.get("youcube.keys.back") or keys.a) then
-                        table.insert(queue, pl) --add the current song to upcoming
-                        local prev = table.remove(back_buffer)
-                        if prev then --nil/false check
-                            table.insert(queue, prev) --add previous song to upcoming
-                        end
-                        if not args.no_video then
-                            libs.youcubeapi.reset_term()
-                        end
-                        break
+
+        local function handle_back_hotkey()
+            while true do
+                local _, key = os.pullEvent("key")
+                if key == back_key then
+                    queue[#queue + 1] = pl --add the current song to upcoming
+                    local prev = table.remove(back_buffer)
+                    if prev then --nil/false check
+                        queue[#queue + 1] = prev --add previous song to upcoming
                     end
+                    if not args.no_video then
+                        libs.youcubeapi.reset_term()
+                    end
+                    break
                 end
-            end,
-            function()
-                play(pl) --play the url
             end
-        )
+        end
+
+        parallel.waitForAny(handle_back_hotkey, function()
+            play(pl) --play the url
+        end)
     end
 end
 

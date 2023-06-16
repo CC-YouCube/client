@@ -12,7 +12,7 @@ run:
 	$(CRAFTOS) \
 		--id 2828 \
 		--exec "shell.run('clear')shell.run('youcube')" \
-		--mount-ro \=.\src
+		--mount-ro /=./src
 
 illuaminate-lint:
 	illuaminate lint
