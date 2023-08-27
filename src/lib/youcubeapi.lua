@@ -33,7 +33,6 @@ end
 -- Contact the server owner on Discord, when the server is down
 local servers = {
     "ws://127.0.0.1:5000", -- Your server!
-    "wss://yc.tweaked-programs.cc", -- by Sammy#5900
     "wss://youcube.knijn.one", -- By EmmaKnijn#0043
     "wss://youcube.onrender.com", -- By Commandcracker#8528
 }
@@ -616,7 +615,7 @@ return {
     --- "Metadata" - [YouCube API](https://commandcracker.github.io/YouCube/) Version
     _API_VERSION = "0.0.0-poc.1.0.0",
     --- "Metadata" - Library Version
-    _VERSION = "0.0.0-poc.1.4.1",
+    _VERSION = "0.0.0-poc.1.4.2",
     --- "Metadata" - Description
     _DESCRIPTION = "Library for accessing YouCub's API",
     --- "Metadata" - Homepage / Url
