@@ -7,7 +7,7 @@ Github Repository: https://github.com/Commandcracker/YouCube
 License: GPL-3.0
 ]]
 
-local _VERSION = "0.0.0-poc.1.1.1"
+local _VERSION = "0.0.0-poc.1.1.2"
 
 -- Libraries - OpenLibrarieLoader v1.0.1 --
 
