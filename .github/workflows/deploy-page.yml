@@ -13,10 +13,10 @@ jobs:
     steps:
       #"standard step" where repo needs to be checked-out first
       - name: Checkout 🛎️
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Lua 🧰
-        uses: leafo/gh-actions-lua@v9
+        uses: leafo/gh-actions-lua@v11
 
       - name: Install Illuaminate 🧰
         run: |
